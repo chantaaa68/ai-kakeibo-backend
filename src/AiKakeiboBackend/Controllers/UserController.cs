@@ -30,12 +30,12 @@ namespace AiKakeiboBackend.Controllers
         /// <summary>
         /// ユーザー情報取得APIです。指定されたユーザーIDに紐づくユーザー情報（名前、メールアドレス等）を取得します。
         /// </summary>
-        /// <param name="UserId">取得対象のユーザーID</param>
+        /// <param name="req">ユーザーデータ取得リクエスト（UserId）</param>
         /// <returns>ユーザー情報</returns>
-        [HttpGet("GetUserData")]
-        public async Task<IActionResult> GetUserDataAsync([FromQuery] int UserId)
+        [HttpPost("GetUserData")]
+        public async Task<IActionResult> GetUserDataAsync([FromBody] GetUserDataRequest req)
         {
-            return await _service.GetUserDataAsync(UserId);
+            return await _service.GetUserDataAsync(req);
         }
 
         /// <summary>

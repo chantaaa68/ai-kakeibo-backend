@@ -6,9 +6,9 @@ namespace AiKakeiboBackend.Services
     public interface IKakeiboService
     {
         Task<IActionResult> UpdateKakeiboAsync(UpdateKakeiboRequest request);
-        Task<IActionResult> GetMonthlyResultAsync(int userId);
-        Task<IActionResult> GetKakeiboItemListAsync(int userId, string range);
-        Task<IActionResult> GetKakeiboItemDetailAsync(int itemId);
+        Task<IActionResult> GetMonthlyResultAsync(GetMonthlyResultRequest request);
+        Task<IActionResult> GetKakeiboItemListAsync(GetKakeiboItemListRequest request);
+        Task<IActionResult> GetKakeiboItemDetailAsync(GetKakeiboItemDetailRequest request);
         Task<IActionResult> RegistKakeiboItemAsync(RegistKakeiboItemRequest request);
         Task<IActionResult> UpdateKakeiboItemAsync(UpdateKakeiboItemRequest request);
         Task<IActionResult> DeleteKakeiboItemAsync(DeleteKakeiboItemRequest request);

@@ -1,4 +1,4 @@
-using AiKakeiboBackend.DTOs;
+using AiKakeiboBackend.Models;
 
 namespace AiKakeiboBackend.Repositories
 {
@@ -11,6 +11,6 @@ namespace AiKakeiboBackend.Repositories
         /// すべてのアイコン情報を取得します
         /// </summary>
         /// <returns>アイコン情報のリスト</returns>
-        Task<List<IconDto>> GetAllIconsAsync();
+        Task<List<Icon>> GetAllIconsAsync();
     }
 }

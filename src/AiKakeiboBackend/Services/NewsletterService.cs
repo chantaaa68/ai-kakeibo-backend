@@ -22,8 +22,8 @@ namespace AiKakeiboBackend.Services
         /// メールタイトルと本文を含むテンプレートを作成し、後でユーザーへのメール送信に利用します。
         /// </summary>
         /// <param name="request">ニュースレター登録リクエスト（タイトル、メール本文を含む）</param>
-        /// <returns>登録成功時は成功メッセージを含むApiResponse。登録失敗時はエラーメッセージを返却</returns>
-        public async Task<IActionResult> RegistNewsletterAsync(RegistNewsletterRequest request)
+        /// <returns>登録成功時は登録件数を含むApiResponse。登録失敗時はエラーメッセージを返却</returns>
+        public async Task<IActionResult> RegistNewsletterAsync(RigistNewsletterRequest request)
         {
             try
             {
@@ -35,7 +35,12 @@ namespace AiKakeiboBackend.Services
 
                 await _newsletterRepository.CreateNewsletterAsync(newsletter);
 
-                return ApiResponseHelper.Success<object>(null, "ニュースレターを登録しました");
+                var response = new RigistNewsletterResponse
+                {
+                    Count = 1
+                };
+
+                return ApiResponseHelper.Success(response, "ニュースレターを登録しました");
             }
             catch (Exception ex)
             {
@@ -48,7 +53,7 @@ namespace AiKakeiboBackend.Services
         /// メールタイトルと本文を更新対象とします。
         /// </summary>
         /// <param name="request">ニュースレター更新リクエスト（ニュースレターID、更新後のタイトル、メール本文を含む）</param>
-        /// <returns>更新成功時は成功メッセージを含むApiResponse。ニュースレターが見つからない場合はエラーメッセージを返却</returns>
+        /// <returns>更新成功時は更新件数を含むApiResponse。ニュースレターが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateNewsletterAsync(UpdateNewsletterRequest request)
         {
             try
@@ -65,7 +70,12 @@ namespace AiKakeiboBackend.Services
 
                 await _newsletterRepository.UpdateNewsletterAsync(newsletter);
 
-                return ApiResponseHelper.Success<object>(null, "ニュースレターを更新しました");
+                var response = new UpdateNewsletterResponse
+                {
+                    Count = 1
+                };
+
+                return ApiResponseHelper.Success(response, "ニュースレターを更新しました");
             }
             catch (Exception ex)
             {
@@ -79,7 +89,7 @@ namespace AiKakeiboBackend.Services
         /// 注意：現在はメール送信処理の実装が未完了です（TODO参照）。
         /// </summary>
         /// <param name="request">ニュースレター送信リクエスト（ニュースレターID、ユーザーID、アイテムIDを含む）</param>
-        /// <returns>送信成功時は成功メッセージを含むApiResponse。ニュースレター、ユーザー、アイテムが見つからない場合はエラーメッセージを返却</returns>
+        /// <returns>送信成功時は送信件数を含むApiResponse。ニュースレター、ユーザー、アイテムが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> SendMailAsync(SendNewsletterRequest request)
         {
             try
@@ -118,7 +128,12 @@ namespace AiKakeiboBackend.Services
                 // TODO: 実際のメール送信処理を実装
                 // 例: await _emailService.SendAsync(user.Email, newsletter.MailTitle, mailContent);
 
-                return ApiResponseHelper.Success<object>(null, "ニュースレターを送信しました");
+                var response = new SendNewsletterResponse
+                {
+                    SendCount = 1
+                };
+
+                return ApiResponseHelper.Success(response, "ニュースレターを送信しました");
             }
             catch (Exception ex)
             {

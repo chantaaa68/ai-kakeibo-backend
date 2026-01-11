@@ -27,9 +27,14 @@ namespace AiKakeiboBackend.Services
             {
                 var icons = await _iconRepository.GetAllIconsAsync();
 
-                var response = new IconListResponse
+                var response = new GetIconListResponse
                 {
-                    Icons = icons
+                    IconDatas = icons.Select(i => new IconData
+                    {
+                        IconId = i.Id,
+                        OfficialIconName = i.OfficialIconName,
+                        DefaultIconName = i.DefaultIconName ?? string.Empty
+                    }).ToList()
                 };
 
                 return ApiResponseHelper.Success(response);

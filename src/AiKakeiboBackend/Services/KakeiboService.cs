@@ -24,7 +24,7 @@ namespace AiKakeiboBackend.Services
         /// 家計簿名と家計簿説明を更新対象とします。
         /// </summary>
         /// <param name="request">家計簿更新リクエスト（家計簿ID、更新後の家計簿名、家計簿説明を含む）</param>
-        /// <returns>更新成功時は成功メッセージを含むApiResponse。家計簿が見つからない場合はエラーメッセージを返却</returns>
+        /// <returns>更新成功時は更新件数を含むApiResponse。家計簿が見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateKakeiboAsync(UpdateKakeiboRequest request)
         {
             try
@@ -36,11 +36,24 @@ namespace AiKakeiboBackend.Services
                     return ApiResponseHelper.Fail("家計簿が見つかりません");
                 }
 
-                kakeibo.KakeiboName = request.KakeiboName;
-                kakeibo.KakeiboExplanation = request.KakeiboExplanation;
+                // nullでない場合のみ更新
+                if (request.KakeiboName != null)
+                {
+                    kakeibo.KakeiboName = request.KakeiboName;
+                }
+                if (request.KakeiboExplanation != null)
+                {
+                    kakeibo.KakeiboExplanation = request.KakeiboExplanation;
+                }
+
                 await _userRepository.UpdateKakeiboAsync(kakeibo);
 
-                return ApiResponseHelper.Success<object>(null, "家計簿情報を更新しました");
+                var response = new UpdateKakeiboResponse
+                {
+                    Count = 1
+                };
+
+                return ApiResponseHelper.Success(response, "家計簿情報を更新しました");
             }
             catch (Exception ex)
             {
@@ -50,16 +63,16 @@ namespace AiKakeiboBackend.Services
 
         /// <summary>
         /// 当月の家計簿集計結果を取得します。
-        /// 当月の収入合計、支出合計、収支差額、およびカテゴリ別の集計結果を算出します。
+        /// 当月の収入合計、支出合計、およびカテゴリ別の集計結果を算出します。
         /// </summary>
-        /// <param name="userId">ユーザーID</param>
+        /// <param name="request">月次集計結果取得リクエスト（ユーザーIDを含む）</param>
         /// <returns>月次集計結果を含むApiResponse。家計簿が存在しない場合はエラーメッセージを返却</returns>
-        public async Task<IActionResult> GetMonthlyResultAsync(int userId)
+        public async Task<IActionResult> GetMonthlyResultAsync(GetMonthlyResultRequest request)
         {
             try
             {
                 // ユーザーIDから家計簿IDを取得
-                int? kakeiboId = await _kakeiboRepository.GetKakeiboIdAsync(userId);
+                int? kakeiboId = await _kakeiboRepository.GetKakeiboIdAsync(request.UserId);
 
                 if (kakeiboId == null || kakeiboId == 0)
                 {
@@ -73,30 +86,48 @@ namespace AiKakeiboBackend.Services
                 // 当月のアイテムを取得
                 var items = await _kakeiboRepository.GetItemsByKakeiboIdForMonthAsync(kakeiboId.Value, startOfMonth, endOfMonth);
 
-                // 収入・支出の合計計算
-                var totalIncome = items.Where(i => i.InoutFlg == true).Sum(i => i.ItemAmount);
-                var totalExpense = items.Where(i => i.InoutFlg == false).Sum(i => i.ItemAmount);
-
-                // カテゴリ別集計
-                var categorySummaries = items
-                    .GroupBy(i => new { i.CategoryId, i.Category.CategoryName, i.InoutFlg })
-                    .Select(g => new CategorySummaryDto
+                // 支出のカテゴリ別集計
+                var expenseCategories = items
+                    .Where(i => !i.InoutFlg)
+                    .GroupBy(i => new { i.Category.CategoryName, i.Category.Icon.OfficialIconName })
+                    .Select(g => new CategoryReportItem
                     {
-                        CategoryId = g.Key.CategoryId,
                         CategoryName = g.Key.CategoryName,
-                        InoutFlg = g.Key.InoutFlg,
+                        IconName = g.Key.OfficialIconName ?? string.Empty,
                         TotalAmount = g.Sum(i => i.ItemAmount)
                     })
                     .ToList();
 
-                var response = new MonthlyResultDto
+                // 収入のカテゴリ別集計
+                var incomeCategories = items
+                    .Where(i => i.InoutFlg)
+                    .GroupBy(i => new { i.Category.CategoryName, i.Category.Icon.OfficialIconName })
+                    .Select(g => new CategoryReportItem
+                    {
+                        CategoryName = g.Key.CategoryName,
+                        IconName = g.Key.OfficialIconName ?? string.Empty,
+                        TotalAmount = g.Sum(i => i.ItemAmount)
+                    })
+                    .ToList();
+
+                var response = new GetMonthlyResultResponse
                 {
-                    Year = now.Year,
-                    Month = now.Month,
-                    TotalIncome = totalIncome,
-                    TotalExpense = totalExpense,
-                    Balance = totalIncome - totalExpense,
-                    CategorySummaries = categorySummaries
+                    MonthlyExpenses = new List<MonthlyReportItem>
+                    {
+                        new MonthlyReportItem
+                        {
+                            UsedMonth = $"{now.Year:D4}-{now.Month:D2}",
+                            CategoryReportItems = expenseCategories
+                        }
+                    },
+                    MonthlyIncomes = new List<MonthlyReportItem>
+                    {
+                        new MonthlyReportItem
+                        {
+                            UsedMonth = $"{now.Year:D4}-{now.Month:D2}",
+                            CategoryReportItems = incomeCategories
+                        }
+                    }
                 };
 
                 return ApiResponseHelper.Success(response);
@@ -110,17 +141,15 @@ namespace AiKakeiboBackend.Services
         /// <summary>
         /// 指定された期間の家計簿アイテム一覧を取得します。
         /// 期間はYYYY-MM形式で指定し、該当月の全アイテムを取得します。
-        /// 期間が指定されない場合は全期間のアイテムを取得します。
         /// </summary>
-        /// <param name="userId">ユーザーID</param>
-        /// <param name="range">取得期間（YYYY-MM形式、省略可能）</param>
+        /// <param name="request">家計簿アイテムリスト取得リクエスト（ユーザーID、取得期間を含む）</param>
         /// <returns>家計簿アイテムリストを含むApiResponse。家計簿が見つからない場合はエラーメッセージを返却</returns>
-        public async Task<IActionResult> GetKakeiboItemListAsync(int userId, string range)
+        public async Task<IActionResult> GetKakeiboItemListAsync(GetKakeiboItemListRequest request)
         {
             try
             {
                 // UserIdからKakeiboIdを取得
-                int? kakeiboId = await _kakeiboRepository.GetKakeiboIdAsync(userId);
+                int? kakeiboId = await _kakeiboRepository.GetKakeiboIdAsync(request.UserId);
 
                 if (kakeiboId == null || kakeiboId == 0)
                 {
@@ -131,9 +160,9 @@ namespace AiKakeiboBackend.Services
                 DateTime? startDate = null;
                 DateTime? endDate = null;
 
-                if (!string.IsNullOrEmpty(range))
+                if (!string.IsNullOrEmpty(request.Range))
                 {
-                    var parts = range.Split('-');
+                    var parts = request.Range.Split('-');
                     if (parts.Length >= 2)
                     {
                         int year = int.Parse(parts[0]);
@@ -145,21 +174,28 @@ namespace AiKakeiboBackend.Services
 
                 var items = await _kakeiboRepository.GetItemsByKakeiboIdAndRangeAsync(kakeiboId.Value, startDate, endDate);
 
-                var itemDtos = items.Select(i => new KakeiboItemDto
-                {
-                    Id = i.Id,
-                    ItemName = i.ItemName ?? string.Empty,
-                    ItemAmount = i.ItemAmount,
-                    InoutFlg = i.InoutFlg,
-                    UsedDate = i.UsedDate,
-                    CategoryId = i.CategoryId,
-                    CategoryName = i.Category.CategoryName,
-                    Frequency = i.KakeiboItemFrequency.Frequency
-                }).ToList();
+                // 日付でグループ化
+                var groupedItems = items
+                    .GroupBy(i => i.UsedDate.Day)
+                    .Select(g => new KakeiboItemInfo
+                    {
+                        DayNo = g.Key,
+                        Items = g.Select(i => new Item
+                        {
+                            ItemId = i.Id,
+                            ItemName = i.ItemName ?? string.Empty,
+                            ItemAmount = i.ItemAmount,
+                            InoutFlg = i.InoutFlg,
+                            UsedDate = i.UsedDate,
+                            IconName = i.Category.Icon?.OfficialIconName ?? string.Empty
+                        }).ToList()
+                    })
+                    .OrderBy(x => x.DayNo)
+                    .ToList();
 
-                var response = new KakeiboItemListResponse
+                var response = new GetKakeiboItemListResponse
                 {
-                    Items = itemDtos
+                    KakeiboItemInfos = groupedItems
                 };
 
                 return ApiResponseHelper.Success(response);
@@ -172,34 +208,28 @@ namespace AiKakeiboBackend.Services
 
         /// <summary>
         /// 指定された家計簿アイテムの詳細情報を取得します。
-        /// アイテムの基本情報に加えて、繰り返し頻度や固定費終了日などの詳細情報を含みます。
+        /// アイテムの基本情報（名称、金額、入出金フラグ、使用日、カテゴリ）を取得します。
         /// </summary>
-        /// <param name="itemId">アイテムID</param>
+        /// <param name="request">家計簿アイテム詳細取得リクエスト（アイテムIDを含む）</param>
         /// <returns>家計簿アイテムの詳細情報を含むApiResponse。アイテムが見つからない場合はエラーメッセージを返却</returns>
-        public async Task<IActionResult> GetKakeiboItemDetailAsync(int itemId)
+        public async Task<IActionResult> GetKakeiboItemDetailAsync(GetKakeiboItemDetailRequest request)
         {
             try
             {
-                var item = await _kakeiboRepository.GetItemByIdAsync(itemId);
+                var item = await _kakeiboRepository.GetItemByIdAsync(request.ItemId);
 
                 if (item == null)
                 {
                     return ApiResponseHelper.Fail("アイテムが見つかりません");
                 }
 
-                var response = new KakeiboItemDetailDto
+                var response = new GetKakeiboItemDetailResponse
                 {
-                    Id = item.Id,
                     ItemName = item.ItemName ?? string.Empty,
                     ItemAmount = item.ItemAmount,
                     InoutFlg = item.InoutFlg,
                     UsedDate = item.UsedDate,
-                    CategoryId = item.CategoryId,
-                    CategoryName = item.Category.CategoryName,
-                    Frequency = item.KakeiboItemFrequency.Frequency,
-                    FixedEndDate = item.KakeiboItemFrequency.FixedEndDate,
-                    CreateDate = item.CreateDate,
-                    UpdateDate = item.UpdateDate
+                    CategoryId = item.CategoryId
                 };
 
                 return ApiResponseHelper.Success(response);
@@ -216,7 +246,7 @@ namespace AiKakeiboBackend.Services
         /// 繰り返し頻度情報は固定費の管理に利用されます。
         /// </summary>
         /// <param name="request">家計簿アイテム登録リクエスト（家計簿ID、カテゴリID、アイテム名、金額、入出金フラグ、使用日、頻度等を含む）</param>
-        /// <returns>登録成功時は成功メッセージを含むApiResponse。家計簿またはカテゴリが見つからない場合はエラーメッセージを返却</returns>
+        /// <returns>登録成功時は登録件数を含むApiResponse。家計簿またはカテゴリが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> RegistKakeiboItemAsync(RegistKakeiboItemRequest request)
         {
             try
@@ -266,7 +296,12 @@ namespace AiKakeiboBackend.Services
 
                 await _kakeiboRepository.CreateItemAsync(item);
 
-                return ApiResponseHelper.Success<object>(null, "アイテムを登録しました");
+                var response = new RegistKakeiboItemResponse
+                {
+                    Count = 1
+                };
+
+                return ApiResponseHelper.Success(response, "アイテムを登録しました");
             }
             catch (Exception ex)
             {
@@ -280,7 +315,7 @@ namespace AiKakeiboBackend.Services
         /// changeFlgがtrueの場合、紐づく繰り返し頻度情報も同時に更新されます（固定費の一括更新）。
         /// </summary>
         /// <param name="request">家計簿アイテム更新リクエスト（アイテムID、更新後の情報、一括変更フラグを含む）</param>
-        /// <returns>更新成功時は成功メッセージを含むApiResponse。アイテムまたはカテゴリが見つからない場合はエラーメッセージを返却</returns>
+        /// <returns>更新成功時は更新件数を含むApiResponse。アイテムまたはカテゴリが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateKakeiboItemAsync(UpdateKakeiboItemRequest request)
         {
             try
@@ -318,7 +353,12 @@ namespace AiKakeiboBackend.Services
 
                 await _kakeiboRepository.UpdateItemAsync(item);
 
-                return ApiResponseHelper.Success<object>(null, "アイテムを更新しました");
+                var response = new UpdateKakeiboItemResponse
+                {
+                    Count = 1
+                };
+
+                return ApiResponseHelper.Success(response, "アイテムを更新しました");
             }
             catch (Exception ex)
             {
@@ -331,13 +371,19 @@ namespace AiKakeiboBackend.Services
         /// アイテムに紐づく繰り返し頻度情報も合わせて削除されます。
         /// </summary>
         /// <param name="request">家計簿アイテム削除リクエスト（削除対象のアイテムIDを含む）</param>
-        /// <returns>削除成功時は成功メッセージを含むApiResponse。削除失敗時はエラーメッセージを返却</returns>
+        /// <returns>削除成功時は削除件数を含むApiResponse。削除失敗時はエラーメッセージを返却</returns>
         public async Task<IActionResult> DeleteKakeiboItemAsync(DeleteKakeiboItemRequest request)
         {
             try
             {
                 await _kakeiboRepository.DeleteItemAsync(request.Id);
-                return ApiResponseHelper.Success<object>(null, "アイテムを削除しました");
+
+                var response = new DeleteKakeiboItemResponse
+                {
+                    Count = 1
+                };
+
+                return ApiResponseHelper.Success(response, "アイテムを削除しました");
             }
             catch (Exception ex)
             {

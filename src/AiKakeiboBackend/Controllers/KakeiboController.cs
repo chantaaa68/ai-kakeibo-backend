@@ -29,36 +29,35 @@ namespace AiKakeiboBackend.Controllers
         /// <summary>
         /// 月次集計取得APIです。指定されたユーザーの当月の家計簿集計結果（収入、支出、残高等）を取得します。
         /// </summary>
-        /// <param name="UserId">取得対象のユーザーID</param>
+        /// <param name="req">月次集計結果取得リクエスト（UserId）</param>
         /// <returns>月次集計結果（収入、固定費、変動費、残高等）</returns>
-        [HttpGet("GetMonthlyResult")]
-        public async Task<IActionResult> GetMonthlyResultAsync([FromQuery] int UserId)
+        [HttpPost("GetMonthlyResult")]
+        public async Task<IActionResult> GetMonthlyResultAsync([FromBody] GetMonthlyResultRequest req)
         {
-            return await _service.GetMonthlyResultAsync(UserId);
+            return await _service.GetMonthlyResultAsync(req);
         }
 
         /// <summary>
         /// 家計簿項目一覧取得APIです。指定された期間範囲の家計簿項目（収入・支出の明細）を取得します。
         /// Rangeパラメータで取得期間を指定できます（例: "2026-01"で2026年1月のデータ）。
         /// </summary>
-        /// <param name="UserId">取得対象のユーザーID</param>
-        /// <param name="Range">取得期間範囲（YYYY-MM形式）</param>
+        /// <param name="req">家計簿アイテムリスト取得リクエスト（UserId, Range）</param>
         /// <returns>家計簿項目のリスト（ItemId, CategoryName, Amount, Date等）</returns>
-        [HttpGet("GetKakeiboItemList")]
-        public async Task<IActionResult> GetKakeiboItemListAsync([FromQuery] int UserId, [FromQuery] string Range)
+        [HttpPost("GetKakeiboItemList")]
+        public async Task<IActionResult> GetKakeiboItemListAsync([FromBody] GetKakeiboItemListRequest req)
         {
-            return await _service.GetKakeiboItemListAsync(UserId, Range);
+            return await _service.GetKakeiboItemListAsync(req);
         }
 
         /// <summary>
         /// 家計簿項目詳細取得APIです。指定された項目IDの詳細情報を取得します。
         /// </summary>
-        /// <param name="ItemId">取得対象の項目ID</param>
+        /// <param name="req">家計簿アイテム詳細取得リクエスト（ItemId）</param>
         /// <returns>家計簿項目詳細（ItemId, CategoryId, Amount, Date, Memo等）</returns>
-        [HttpGet("GetKakeiboItemDetail")]
-        public async Task<IActionResult> GetKakeiboItemDetailAsync([FromQuery] int ItemId)
+        [HttpPost("GetKakeiboItemDetail")]
+        public async Task<IActionResult> GetKakeiboItemDetailAsync([FromBody] GetKakeiboItemDetailRequest req)
         {
-            return await _service.GetKakeiboItemDetailAsync(ItemId);
+            return await _service.GetKakeiboItemDetailAsync(req);
         }
 
         /// <summary>

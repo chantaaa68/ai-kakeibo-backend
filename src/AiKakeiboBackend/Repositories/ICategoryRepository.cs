@@ -13,13 +13,13 @@ namespace AiKakeiboBackend.Repositories
         /// </summary>
         /// <param name="kakeiboId">家計簿ID</param>
         /// <returns>カテゴリ情報のリスト</returns>
-        Task<List<CategoryDto>> GetCategoriesByKakeiboIdAsync(int kakeiboId);
+        Task<List<Category>> GetCategoriesByKakeiboIdAsync(int kakeiboId);
 
         /// <summary>
         /// デフォルトカテゴリ一覧を取得します
         /// </summary>
         /// <returns>デフォルトカテゴリ情報のリスト</returns>
-        Task<List<CategoryDto>> GetDefaultCategoriesAsync();
+        Task<List<CategoryDefault>> GetDefaultCategoriesAsync();
 
         /// <summary>
         /// カテゴリIDを使用してカテゴリを取得します

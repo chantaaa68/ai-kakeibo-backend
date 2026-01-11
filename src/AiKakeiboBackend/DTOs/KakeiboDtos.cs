@@ -5,6 +5,49 @@ namespace AiKakeiboBackend.DTOs
     // Kakeibo リクエストDTO
 
     /// <summary>
+    /// 月次集計結果取得リクエスト
+    /// </summary>
+    public class GetMonthlyResultRequest
+    {
+        /// <summary>
+        /// ユーザーID
+        /// </summary>
+        [Required]
+        public int UserId { get; set; }
+    }
+
+    /// <summary>
+    /// 家計簿アイテムリスト取得リクエスト
+    /// </summary>
+    public class GetKakeiboItemListRequest
+    {
+        /// <summary>
+        /// ユーザーID
+        /// </summary>
+        [Required]
+        public int UserId { get; set; }
+
+        /// <summary>
+        /// 範囲
+        /// </summary>
+        [Required]
+        [MinLength(1)]
+        public required string Range { get; set; }
+    }
+
+    /// <summary>
+    /// 家計簿アイテム詳細取得リクエスト
+    /// </summary>
+    public class GetKakeiboItemDetailRequest
+    {
+        /// <summary>
+        /// アイテムID
+        /// </summary>
+        [Required]
+        public int ItemId { get; set; }
+    }
+
+    /// <summary>
     /// 家計簿更新リクエスト
     /// </summary>
     public class UpdateKakeiboRequest
@@ -18,16 +61,14 @@ namespace AiKakeiboBackend.DTOs
         /// <summary>
         /// 家計簿名
         /// </summary>
-        [Required]
         [MinLength(1)]
-        public required string KakeiboName { get; set; }
+        public string? KakeiboName { get; set; }
 
         /// <summary>
         /// 家計簿説明
         /// </summary>
-        [Required]
         [MinLength(1)]
-        public required string KakeiboExplanation { get; set; }
+        public string? KakeiboExplanation { get; set; }
     }
 
     /// <summary>
@@ -149,53 +190,48 @@ namespace AiKakeiboBackend.DTOs
     // Kakeibo レスポンスDTO
 
     /// <summary>
-    /// 月次集計結果DTO
+    /// 月次集計結果取得レスポンス
     /// </summary>
-    public class MonthlyResultDto
+    public class GetMonthlyResultResponse
     {
         /// <summary>
-        /// 年
+        /// 月次支出リスト
         /// </summary>
-        public int Year { get; set; }
+        public List<MonthlyReportItem> MonthlyExpenses { get; set; } = new();
         /// <summary>
-        /// 月
+        /// 月次収入リスト
         /// </summary>
-        public int Month { get; set; }
-        /// <summary>
-        /// 収入合計
-        /// </summary>
-        public int TotalIncome { get; set; }
-        /// <summary>
-        /// 支出合計
-        /// </summary>
-        public int TotalExpense { get; set; }
-        /// <summary>
-        /// 収支差額
-        /// </summary>
-        public int Balance { get; set; }
-        /// <summary>
-        /// カテゴリー別集計リスト
-        /// </summary>
-        public List<CategorySummaryDto> CategorySummaries { get; set; } = new();
+        public List<MonthlyReportItem> MonthlyIncomes { get; set; } = new();
     }
 
     /// <summary>
-    /// カテゴリー別集計DTO
+    /// 月次レポート項目
     /// </summary>
-    public class CategorySummaryDto
+    public class MonthlyReportItem
     {
         /// <summary>
-        /// カテゴリーID
+        /// 使用月 (YYYY-MM形式)
         /// </summary>
-        public int CategoryId { get; set; }
+        public string UsedMonth { get; set; } = string.Empty;
+        /// <summary>
+        /// カテゴリー別レポート項目リスト
+        /// </summary>
+        public List<CategoryReportItem> CategoryReportItems { get; set; } = new();
+    }
+
+    /// <summary>
+    /// カテゴリー別レポート項目
+    /// </summary>
+    public class CategoryReportItem
+    {
         /// <summary>
         /// カテゴリー名
         /// </summary>
         public string CategoryName { get; set; } = string.Empty;
         /// <summary>
-        /// 収支フラグ (true: 収入, false: 支出)
+        /// アイコン名
         /// </summary>
-        public bool InoutFlg { get; set; }
+        public string IconName { get; set; } = string.Empty;
         /// <summary>
         /// 合計金額
         /// </summary>
@@ -203,25 +239,67 @@ namespace AiKakeiboBackend.DTOs
     }
 
     /// <summary>
-    /// 家計簿アイテムリストレスポンス
+    /// 家計簿アイテムリスト取得レスポンス
     /// </summary>
-    public class KakeiboItemListResponse
+    public class GetKakeiboItemListResponse
     {
+        /// <summary>
+        /// 家計簿アイテム情報リスト
+        /// </summary>
+        public List<KakeiboItemInfo> KakeiboItemInfos { get; set; } = new();
+    }
+
+    /// <summary>
+    /// 家計簿アイテム情報
+    /// </summary>
+    public class KakeiboItemInfo
+    {
+        /// <summary>
+        /// 日付番号
+        /// </summary>
+        public int DayNo { get; set; }
         /// <summary>
         /// アイテムリスト
         /// </summary>
-        public List<KakeiboItemDto> Items { get; set; } = new();
+        public List<Item> Items { get; set; } = new();
     }
 
     /// <summary>
-    /// 家計簿アイテムDTO
+    /// アイテム
     /// </summary>
-    public class KakeiboItemDto
+    public class Item
     {
         /// <summary>
         /// アイテムID
         /// </summary>
-        public int Id { get; set; }
+        public int ItemId { get; set; }
+        /// <summary>
+        /// アイテム名
+        /// </summary>
+        public string ItemName { get; set; } = string.Empty;
+        /// <summary>
+        /// アイテム金額
+        /// </summary>
+        public int ItemAmount { get; set; }
+        /// <summary>
+        /// 収支フラグ (true: 収入, false: 支出)
+        /// </summary>
+        public bool InoutFlg { get; set; }
+        /// <summary>
+        /// 使用日
+        /// </summary>
+        public DateTime UsedDate { get; set; }
+        /// <summary>
+        /// アイコン名
+        /// </summary>
+        public string IconName { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// 家計簿アイテム詳細取得レスポンス
+    /// </summary>
+    public class GetKakeiboItemDetailResponse
+    {
         /// <summary>
         /// アイテム名
         /// </summary>
@@ -242,64 +320,49 @@ namespace AiKakeiboBackend.DTOs
         /// カテゴリーID
         /// </summary>
         public int CategoryId { get; set; }
-        /// <summary>
-        /// カテゴリー名
-        /// </summary>
-        public string CategoryName { get; set; } = string.Empty;
-        /// <summary>
-        /// 頻度 (0: 都度, 1-11: 毎月の繰り返し)
-        /// </summary>
-        public int Frequency { get; set; }
     }
 
     /// <summary>
-    /// 家計簿アイテム詳細DTO
+    /// 家計簿更新レスポンス
     /// </summary>
-    public class KakeiboItemDetailDto
+    public class UpdateKakeiboResponse
     {
         /// <summary>
-        /// アイテムID
+        /// 更新件数
         /// </summary>
-        public int Id { get; set; }
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// 家計簿アイテム登録レスポンス
+    /// </summary>
+    public class RegistKakeiboItemResponse
+    {
         /// <summary>
-        /// アイテム名
+        /// 登録件数
         /// </summary>
-        public string ItemName { get; set; } = string.Empty;
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// 家計簿アイテム更新レスポンス
+    /// </summary>
+    public class UpdateKakeiboItemResponse
+    {
         /// <summary>
-        /// アイテム金額
+        /// 更新件数
         /// </summary>
-        public int ItemAmount { get; set; }
+        public int Count { get; set; }
+    }
+
+    /// <summary>
+    /// 家計簿アイテム削除レスポンス
+    /// </summary>
+    public class DeleteKakeiboItemResponse
+    {
         /// <summary>
-        /// 収支フラグ (true: 収入, false: 支出)
+        /// 削除件数
         /// </summary>
-        public bool InoutFlg { get; set; }
-        /// <summary>
-        /// 使用日
-        /// </summary>
-        public DateTime UsedDate { get; set; }
-        /// <summary>
-        /// カテゴリーID
-        /// </summary>
-        public int CategoryId { get; set; }
-        /// <summary>
-        /// カテゴリー名
-        /// </summary>
-        public string CategoryName { get; set; } = string.Empty;
-        /// <summary>
-        /// 頻度 (0: 都度, 1-11: 毎月の繰り返し)
-        /// </summary>
-        public int Frequency { get; set; }
-        /// <summary>
-        /// 固定終了日
-        /// </summary>
-        public DateTime? FixedEndDate { get; set; }
-        /// <summary>
-        /// 作成日
-        /// </summary>
-        public DateTime CreateDate { get; set; }
-        /// <summary>
-        /// 更新日
-        /// </summary>
-        public DateTime UpdateDate { get; set; }
+        public int Count { get; set; }
     }
 }

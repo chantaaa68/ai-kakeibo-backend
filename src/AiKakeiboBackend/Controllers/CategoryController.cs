@@ -19,13 +19,12 @@ namespace AiKakeiboBackend.Controllers
         /// カテゴリ情報取得APIです。指定された条件に基づいてカテゴリ情報を取得します。
         /// ユーザーIDを指定した場合はそのユーザーのカスタムカテゴリを、DefaultFlgを指定した場合はデフォルトカテゴリを取得します。
         /// </summary>
-        /// <param name="UserId">取得対象のユーザーID（省略可）</param>
-        /// <param name="DefaultFlg">デフォルトカテゴリを取得するかどうか（省略可）</param>
+        /// <param name="req">カテゴリデータ取得リクエスト（UserId, DefaultFlg）</param>
         /// <returns>カテゴリ情報のリスト</returns>
-        [HttpGet("GetCategoryData")]
-        public async Task<IActionResult> GetCategoryDataAsync([FromQuery] int? UserId, [FromQuery] bool? DefaultFlg)
+        [HttpPost("GetCategoryData")]
+        public async Task<IActionResult> GetCategoryDataAsync([FromBody] GetCategoryDataRequest req)
         {
-            return await _service.GetCategoryDataAsync(UserId, DefaultFlg);
+            return await _service.GetCategoryDataAsync(req);
         }
 
         /// <summary>

@@ -22,7 +22,7 @@ namespace AiKakeiboBackend.Controllers
         /// <param name="req">ニュースレター登録リクエスト（Title, Content等）</param>
         /// <returns>登録結果（登録されたニュースレター情報）</returns>
         [HttpPost("RegistNewsletter")]
-        public async Task<IActionResult> RegistNewsletterAsync([FromBody] RegistNewsletterRequest req)
+        public async Task<IActionResult> RegistNewsletterAsync([FromBody] RigistNewsletterRequest req)
         {
             return await _service.RegistNewsletterAsync(req);
         }

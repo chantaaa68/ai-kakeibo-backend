@@ -5,6 +5,24 @@ namespace AiKakeiboBackend.DTOs
     // Category リクエストDTO
 
     /// <summary>
+    /// カテゴリーデータ取得リクエスト
+    /// </summary>
+    public class GetCategoryDataRequest
+    {
+        /// <summary>
+        /// ユーザーID
+        /// </summary>
+        [Required]
+        public int UserId { get; set; }
+
+        /// <summary>
+        /// デフォルトフラグ (true: デフォルトカテゴリー, false: ユーザーカテゴリー)
+        /// </summary>
+        [Required]
+        public bool DefaultFlg { get; set; }
+    }
+
+    /// <summary>
     /// カテゴリー登録リクエスト
     /// </summary>
     public class RegistCategoryRequest
@@ -66,9 +84,20 @@ namespace AiKakeiboBackend.DTOs
     // Category レスポンスDTO
 
     /// <summary>
-    /// カテゴリー情報DTO
+    /// カテゴリーデータ取得レスポンス
     /// </summary>
-    public class CategoryDto
+    public class GetCategoryDataResponse
+    {
+        /// <summary>
+        /// カテゴリーリスト
+        /// </summary>
+        public List<CategoryItem>? Categories { get; set; }
+    }
+
+    /// <summary>
+    /// カテゴリー項目
+    /// </summary>
+    public class CategoryItem
     {
         /// <summary>
         /// カテゴリーID
@@ -86,20 +115,27 @@ namespace AiKakeiboBackend.DTOs
         /// アイコン名
         /// </summary>
         public string IconName { get; set; } = string.Empty;
-        /// <summary>
-        /// アイコンID
-        /// </summary>
-        public int IconId { get; set; }
     }
 
     /// <summary>
-    /// カテゴリーリストレスポンス
+    /// カテゴリー登録レスポンス
     /// </summary>
-    public class CategoryListResponse
+    public class RegistCategoryResponse
     {
         /// <summary>
-        /// カテゴリーリスト
+        /// カテゴリーID
         /// </summary>
-        public List<CategoryDto> Categories { get; set; } = new();
+        public int CategoryId { get; set; }
+    }
+
+    /// <summary>
+    /// カテゴリー更新レスポンス
+    /// </summary>
+    public class UpdateCategoryResponse
+    {
+        /// <summary>
+        /// カテゴリーID
+        /// </summary>
+        public int CategoryId { get; set; }
     }
 }

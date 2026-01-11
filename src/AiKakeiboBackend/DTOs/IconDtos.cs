@@ -3,32 +3,32 @@ namespace AiKakeiboBackend.DTOs
     // Icon レスポンスDTO
 
     /// <summary>
-    /// アイコン情報DTO
+    /// アイコンリスト取得レスポンス
     /// </summary>
-    public class IconDto
+    public class GetIconListResponse
+    {
+        /// <summary>
+        /// アイコンデータリスト
+        /// </summary>
+        public List<IconData> IconDatas { get; set; } = new();
+    }
+
+    /// <summary>
+    /// アイコンデータ
+    /// </summary>
+    public class IconData
     {
         /// <summary>
         /// アイコンID
         /// </summary>
-        public int Id { get; set; }
+        public int IconId { get; set; }
         /// <summary>
-        /// アイコン名
+        /// 公式アイコン名
         /// </summary>
-        public string IconName { get; set; } = string.Empty;
+        public string OfficialIconName { get; set; } = string.Empty;
         /// <summary>
-        /// アイコンパス
+        /// デフォルトアイコン名
         /// </summary>
-        public string IconPath { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-    /// アイコンリストレスポンス
-    /// </summary>
-    public class IconListResponse
-    {
-        /// <summary>
-        /// アイコンリスト
-        /// </summary>
-        public List<IconDto> Icons { get; set; } = new();
+        public string DefaultIconName { get; set; } = string.Empty;
     }
 }

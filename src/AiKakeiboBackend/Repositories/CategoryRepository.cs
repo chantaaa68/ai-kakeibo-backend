@@ -28,19 +28,11 @@ namespace AiKakeiboBackend.Repositories
         /// </summary>
         /// <param name="kakeiboId">家計簿ID</param>
         /// <returns>カテゴリ情報のリスト</returns>
-        public async Task<List<CategoryDto>> GetCategoriesByKakeiboIdAsync(int kakeiboId)
+        public async Task<List<Category>> GetCategoriesByKakeiboIdAsync(int kakeiboId)
         {
             return await _context.Categories
                 .Include(c => c.Icon)
                 .Where(c => c.KakeiboID == kakeiboId && c.DeleteDate == null)
-                .Select(c => new CategoryDto
-                {
-                    Id = c.Id,
-                    CategoryName = c.CategoryName,
-                    InoutFlg = c.InoutFlg,
-                    IconName = c.Icon.DefaultIconName,
-                    IconId = c.IconId
-                })
                 .ToListAsync();
         }
 
@@ -48,19 +40,11 @@ namespace AiKakeiboBackend.Repositories
         /// デフォルトカテゴリ一覧を取得します
         /// </summary>
         /// <returns>デフォルトカテゴリ情報のリスト</returns>
-        public async Task<List<CategoryDto>> GetDefaultCategoriesAsync()
+        public async Task<List<CategoryDefault>> GetDefaultCategoriesAsync()
         {
             return await _context.CategoryDefaults
                 .Include(c => c.Icon)
                 .Where(c => c.DeleteDate == null)
-                .Select(c => new CategoryDto
-                {
-                    Id = c.Id,
-                    CategoryName = c.KategoryName,
-                    InoutFlg = c.InoutFlg,
-                    IconName = c.Icon.DefaultIconName,
-                    IconId = c.IconId
-                })
                 .ToListAsync();
         }
 

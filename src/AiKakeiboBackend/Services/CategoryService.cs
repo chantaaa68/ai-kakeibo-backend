@@ -24,35 +24,46 @@ namespace AiKakeiboBackend.Services
         /// ユーザーIDが指定された場合はユーザー固有のカテゴリを、デフォルトフラグがtrueの場合はシステムデフォルトカテゴリを取得します。
         /// 両方の条件を指定することで、ユーザーカテゴリとデフォルトカテゴリの両方を取得可能です。
         /// </summary>
-        /// <param name="userId">ユーザーID（省略可能）。指定された場合、該当ユーザーの家計簿に紐づくカテゴリを取得</param>
-        /// <param name="defaultFlg">デフォルトカテゴリ取得フラグ（省略可能）。trueの場合、システムデフォルトカテゴリを取得</param>
+        /// <param name="request">カテゴリデータ取得リクエスト（ユーザーID、デフォルトフラグを含む）</param>
         /// <returns>カテゴリリストを含むApiResponse。取得成功時はカテゴリ情報の配列、失敗時はエラーメッセージを返却</returns>
-        public async Task<IActionResult> GetCategoryDataAsync(int? userId, bool? defaultFlg)
+        public async Task<IActionResult> GetCategoryDataAsync(GetCategoryDataRequest request)
         {
             try
             {
-                var categories = new List<CategoryDto>();
+                var categories = new List<CategoryItem>();
 
-                // ユーザー固有のカテゴリを取得
-                if (userId.HasValue)
+                // ユーザー固有のカテゴリを取得（DefaultFlgがfalseの場合）
+                if (!request.DefaultFlg)
                 {
-                    var kakeibo = await _userRepository.GetKakeiboByUserIdAsync(userId.Value);
+                    var kakeibo = await _userRepository.GetKakeiboByUserIdAsync(request.UserId);
 
                     if (kakeibo != null)
                     {
                         var userCategories = await _categoryRepository.GetCategoriesByKakeiboIdAsync(kakeibo.Id);
-                        categories.AddRange(userCategories);
+                        categories.AddRange(userCategories.Select(c => new CategoryItem
+                        {
+                            Id = c.Id,
+                            CategoryName = c.CategoryName,
+                            InoutFlg = c.InoutFlg,
+                            IconName = c.Icon?.OfficialIconName ?? string.Empty
+                        }));
                     }
                 }
 
-                // デフォルトカテゴリを取得
-                if (defaultFlg == true)
+                // デフォルトカテゴリを取得（DefaultFlgがtrueの場合）
+                if (request.DefaultFlg)
                 {
                     var defaultCategories = await _categoryRepository.GetDefaultCategoriesAsync();
-                    categories.AddRange(defaultCategories);
+                    categories.AddRange(defaultCategories.Select(c => new CategoryItem
+                    {
+                        Id = c.Id,
+                        CategoryName = c.CategoryName,
+                        InoutFlg = c.InoutFlg,
+                        IconName = c.Icon?.OfficialIconName ?? string.Empty
+                    }));
                 }
 
-                var response = new CategoryListResponse
+                var response = new GetCategoryDataResponse
                 {
                     Categories = categories
                 };
@@ -70,7 +81,7 @@ namespace AiKakeiboBackend.Services
         /// ユーザーIDから家計簿IDを特定し、指定されたアイコン名に対応するアイコンIDを取得して、カテゴリを作成します。
         /// </summary>
         /// <param name="request">カテゴリ登録リクエスト（ユーザーID、カテゴリ名、入出金フラグ、アイコン名を含む）</param>
-        /// <returns>登録成功時は成功メッセージを含むApiResponse。家計簿またはアイコンが見つからない場合はエラーメッセージを返却</returns>
+        /// <returns>登録成功時はカテゴリIDを含むApiResponse。家計簿またはアイコンが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> RegistCategoryAsync(RegistCategoryRequest request)
         {
             try
@@ -102,7 +113,12 @@ namespace AiKakeiboBackend.Services
 
                 await _categoryRepository.CreateCategoryAsync(category);
 
-                return ApiResponseHelper.Success<object>(null, "カテゴリを登録しました");
+                var response = new RegistCategoryResponse
+                {
+                    CategoryId = category.Id
+                };
+
+                return ApiResponseHelper.Success(response, "カテゴリを登録しました");
             }
             catch (Exception ex)
             {
@@ -116,7 +132,7 @@ namespace AiKakeiboBackend.Services
         /// 各パラメータは省略可能で、指定された項目のみ更新されます。
         /// </summary>
         /// <param name="request">カテゴリ更新リクエスト（カテゴリID、更新後のカテゴリ名、入出金フラグ、アイコン名を含む）</param>
-        /// <returns>更新成功時は成功メッセージを含むApiResponse。カテゴリまたはアイコンが見つからない場合はエラーメッセージを返却</returns>
+        /// <returns>更新成功時はカテゴリIDを含むApiResponse。カテゴリまたはアイコンが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateCategoryAsync(UpdateCategoryRequest request)
         {
             try
@@ -155,7 +171,12 @@ namespace AiKakeiboBackend.Services
 
                 await _categoryRepository.UpdateCategoryAsync(category);
 
-                return ApiResponseHelper.Success<object>(null, "カテゴリを更新しました");
+                var response = new UpdateCategoryResponse
+                {
+                    CategoryId = category.Id
+                };
+
+                return ApiResponseHelper.Success(response, "カテゴリを更新しました");
             }
             catch (Exception ex)
             {
