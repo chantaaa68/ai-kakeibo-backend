@@ -12,13 +12,13 @@ namespace AiKakeiboBackend.DTOs
         public bool Status { get; set; }
 
         /// <summary>
-        /// エラーメッセージ (失敗時、フロントに表示するための文字列)
+        /// メッセージ (失敗時、フロントに表示するための文字列)
         /// </summary>
-        public string Message { get; set; } = string.Empty;
+        public string? Message { get; set; }
 
         /// <summary>
         /// 実際のAPIレスポンス内容
         /// </summary>
-        public T? Data { get; set; }
+        public T? Result { get; set; }
     }
 }

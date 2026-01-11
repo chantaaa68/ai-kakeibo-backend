@@ -15,6 +15,20 @@ builder.Services.AddSwaggerGen();
 // JWT サービスの登録
 builder.Services.AddScoped<JwtService>();
 
+// Repositories の登録
+builder.Services.AddScoped<AiKakeiboBackend.Repositories.IUserRepository, AiKakeiboBackend.Repositories.UserRepository>();
+builder.Services.AddScoped<AiKakeiboBackend.Repositories.ICategoryRepository, AiKakeiboBackend.Repositories.CategoryRepository>();
+builder.Services.AddScoped<AiKakeiboBackend.Repositories.IIconRepository, AiKakeiboBackend.Repositories.IconRepository>();
+builder.Services.AddScoped<AiKakeiboBackend.Repositories.IKakeiboRepository, AiKakeiboBackend.Repositories.KakeiboRepository>();
+builder.Services.AddScoped<AiKakeiboBackend.Repositories.INewsletterRepository, AiKakeiboBackend.Repositories.NewsletterRepository>();
+
+// Services の登録
+builder.Services.AddScoped<AiKakeiboBackend.Services.IUserService, AiKakeiboBackend.Services.UserService>();
+builder.Services.AddScoped<AiKakeiboBackend.Services.ICategoryService, AiKakeiboBackend.Services.CategoryService>();
+builder.Services.AddScoped<AiKakeiboBackend.Services.IIconService, AiKakeiboBackend.Services.IconService>();
+builder.Services.AddScoped<AiKakeiboBackend.Services.IKakeiboService, AiKakeiboBackend.Services.KakeiboService>();
+builder.Services.AddScoped<AiKakeiboBackend.Services.INewsletterService, AiKakeiboBackend.Services.NewsletterService>();
+
 // Configure DbContext
 builder.Services.AddDbContext<KakeiboDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

@@ -1,44 +1,43 @@
 using AiKakeiboBackend.DTOs;
+using Microsoft.AspNetCore.Mvc;
 
-namespace AiKakeiboBackend.Services
+namespace AiKakeiboBackend.Helpers
 {
     /// <summary>
-    /// HTTP レスポンスを統一的に生成するサービス
+    /// API レスポンスヘルパー
     /// </summary>
-    public class HttpResponseService
+    public static class ApiResponseHelper
     {
         /// <summary>
         /// 成功レスポンスを生成する
         /// </summary>
         /// <typeparam name="T">データの型</typeparam>
-        /// <param name="data">レスポンスデータ</param>
+        /// <param name="result">レスポンスデータ</param>
         /// <param name="message">メッセージ（省略可）</param>
         /// <returns>成功レスポンス</returns>
-        public static ApiResponse<T> Ok<T>(T data, string message = "処理が正常に完了しました")
+        public static IActionResult Success<T>(T result, string? message = null)
         {
-            return new ApiResponse<T>
+            return new OkObjectResult(new ApiResponse<T>
             {
                 Status = true,
                 Message = message,
-                Data = data
-            };
+                Result = result
+            });
         }
 
         /// <summary>
         /// 失敗レスポンスを生成する
         /// </summary>
-        /// <typeparam name="T">データの型</typeparam>
         /// <param name="message">エラーメッセージ</param>
-        /// <param name="data">レスポンスデータ（省略可）</param>
         /// <returns>失敗レスポンス</returns>
-        public static ApiResponse<T> Fail<T>(string message, T? data = default)
+        public static IActionResult Fail(string message)
         {
-            return new ApiResponse<T>
+            return new BadRequestObjectResult(new ApiResponse<object>
             {
                 Status = false,
                 Message = message,
-                Data = data
-            };
+                Result = default
+            });
         }
     }
 }
