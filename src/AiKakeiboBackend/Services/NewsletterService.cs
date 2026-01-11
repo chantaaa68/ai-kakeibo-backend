@@ -1,3 +1,4 @@
+using AiKakeiboBackend.Attributes;
 using AiKakeiboBackend.DTOs;
 using AiKakeiboBackend.Helpers;
 using AiKakeiboBackend.Models;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AiKakeiboBackend.Services
 {
+    [Service]
     public class NewsletterService : INewsletterService
     {
         private readonly INewsletterRepository _newsletterRepository;
@@ -15,6 +17,12 @@ namespace AiKakeiboBackend.Services
             _newsletterRepository = newsletterRepository;
         }
 
+        /// <summary>
+        /// 新規ニュースレターテンプレートを登録します。
+        /// メールタイトルと本文を含むテンプレートを作成し、後でユーザーへのメール送信に利用します。
+        /// </summary>
+        /// <param name="request">ニュースレター登録リクエスト（タイトル、メール本文を含む）</param>
+        /// <returns>登録成功時は成功メッセージを含むApiResponse。登録失敗時はエラーメッセージを返却</returns>
         public async Task<IActionResult> RegistNewsletterAsync(RegistNewsletterRequest request)
         {
             try
@@ -35,6 +43,12 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 既存のニュースレターテンプレートを更新します。
+        /// メールタイトルと本文を更新対象とします。
+        /// </summary>
+        /// <param name="request">ニュースレター更新リクエスト（ニュースレターID、更新後のタイトル、メール本文を含む）</param>
+        /// <returns>更新成功時は成功メッセージを含むApiResponse。ニュースレターが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateNewsletterAsync(UpdateNewsletterRequest request)
         {
             try
@@ -59,6 +73,13 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// ニュースレターテンプレートを使用してユーザーにメールを送信します。
+        /// テンプレート内のプレースホルダー（{UserName}、{ItemName}、{ItemAmount}）を実際の値に置換して送信します。
+        /// 注意：現在はメール送信処理の実装が未完了です（TODO参照）。
+        /// </summary>
+        /// <param name="request">ニュースレター送信リクエスト（ニュースレターID、ユーザーID、アイテムIDを含む）</param>
+        /// <returns>送信成功時は成功メッセージを含むApiResponse。ニュースレター、ユーザー、アイテムが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> SendMailAsync(SendNewsletterRequest request)
         {
             try

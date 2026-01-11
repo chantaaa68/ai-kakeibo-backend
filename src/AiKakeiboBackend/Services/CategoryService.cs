@@ -1,3 +1,4 @@
+using AiKakeiboBackend.Attributes;
 using AiKakeiboBackend.DTOs;
 using AiKakeiboBackend.Helpers;
 using AiKakeiboBackend.Models;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AiKakeiboBackend.Services
 {
+    [Service]
     public class CategoryService : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository;
@@ -17,6 +19,14 @@ namespace AiKakeiboBackend.Services
             _userRepository = userRepository;
         }
 
+        /// <summary>
+        /// カテゴリ情報を取得します。
+        /// ユーザーIDが指定された場合はユーザー固有のカテゴリを、デフォルトフラグがtrueの場合はシステムデフォルトカテゴリを取得します。
+        /// 両方の条件を指定することで、ユーザーカテゴリとデフォルトカテゴリの両方を取得可能です。
+        /// </summary>
+        /// <param name="userId">ユーザーID（省略可能）。指定された場合、該当ユーザーの家計簿に紐づくカテゴリを取得</param>
+        /// <param name="defaultFlg">デフォルトカテゴリ取得フラグ（省略可能）。trueの場合、システムデフォルトカテゴリを取得</param>
+        /// <returns>カテゴリリストを含むApiResponse。取得成功時はカテゴリ情報の配列、失敗時はエラーメッセージを返却</returns>
         public async Task<IActionResult> GetCategoryDataAsync(int? userId, bool? defaultFlg)
         {
             try
@@ -55,6 +65,12 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 新規カテゴリの登録処理を実行します。
+        /// ユーザーIDから家計簿IDを特定し、指定されたアイコン名に対応するアイコンIDを取得して、カテゴリを作成します。
+        /// </summary>
+        /// <param name="request">カテゴリ登録リクエスト（ユーザーID、カテゴリ名、入出金フラグ、アイコン名を含む）</param>
+        /// <returns>登録成功時は成功メッセージを含むApiResponse。家計簿またはアイコンが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> RegistCategoryAsync(RegistCategoryRequest request)
         {
             try
@@ -94,6 +110,13 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 既存カテゴリの情報を更新します。
+        /// カテゴリ名、入出金フラグ、アイコンを個別または複数同時に更新可能です。
+        /// 各パラメータは省略可能で、指定された項目のみ更新されます。
+        /// </summary>
+        /// <param name="request">カテゴリ更新リクエスト（カテゴリID、更新後のカテゴリ名、入出金フラグ、アイコン名を含む）</param>
+        /// <returns>更新成功時は成功メッセージを含むApiResponse。カテゴリまたはアイコンが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateCategoryAsync(UpdateCategoryRequest request)
         {
             try

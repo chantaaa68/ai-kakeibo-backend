@@ -1,3 +1,4 @@
+using AiKakeiboBackend.Attributes;
 using AiKakeiboBackend.DTOs;
 using AiKakeiboBackend.Helpers;
 using AiKakeiboBackend.Models;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AiKakeiboBackend.Services
 {
+    [Service]
     public class KakeiboService : IKakeiboService
     {
         private readonly IKakeiboRepository _kakeiboRepository;
@@ -17,6 +19,12 @@ namespace AiKakeiboBackend.Services
             _userRepository = userRepository;
         }
 
+        /// <summary>
+        /// 家計簿の基本情報を更新します。
+        /// 家計簿名と家計簿説明を更新対象とします。
+        /// </summary>
+        /// <param name="request">家計簿更新リクエスト（家計簿ID、更新後の家計簿名、家計簿説明を含む）</param>
+        /// <returns>更新成功時は成功メッセージを含むApiResponse。家計簿が見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateKakeiboAsync(UpdateKakeiboRequest request)
         {
             try
@@ -40,6 +48,12 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 当月の家計簿集計結果を取得します。
+        /// 当月の収入合計、支出合計、収支差額、およびカテゴリ別の集計結果を算出します。
+        /// </summary>
+        /// <param name="userId">ユーザーID</param>
+        /// <returns>月次集計結果を含むApiResponse。家計簿が存在しない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> GetMonthlyResultAsync(int userId)
         {
             try
@@ -93,6 +107,14 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 指定された期間の家計簿アイテム一覧を取得します。
+        /// 期間はYYYY-MM形式で指定し、該当月の全アイテムを取得します。
+        /// 期間が指定されない場合は全期間のアイテムを取得します。
+        /// </summary>
+        /// <param name="userId">ユーザーID</param>
+        /// <param name="range">取得期間（YYYY-MM形式、省略可能）</param>
+        /// <returns>家計簿アイテムリストを含むApiResponse。家計簿が見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> GetKakeiboItemListAsync(int userId, string range)
         {
             try
@@ -148,6 +170,12 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 指定された家計簿アイテムの詳細情報を取得します。
+        /// アイテムの基本情報に加えて、繰り返し頻度や固定費終了日などの詳細情報を含みます。
+        /// </summary>
+        /// <param name="itemId">アイテムID</param>
+        /// <returns>家計簿アイテムの詳細情報を含むApiResponse。アイテムが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> GetKakeiboItemDetailAsync(int itemId)
         {
             try
@@ -182,6 +210,13 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 新規家計簿アイテムを登録します。
+        /// アイテムの基本情報（名称、金額、カテゴリ等）と繰り返し頻度情報を同時に作成します。
+        /// 繰り返し頻度情報は固定費の管理に利用されます。
+        /// </summary>
+        /// <param name="request">家計簿アイテム登録リクエスト（家計簿ID、カテゴリID、アイテム名、金額、入出金フラグ、使用日、頻度等を含む）</param>
+        /// <returns>登録成功時は成功メッセージを含むApiResponse。家計簿またはカテゴリが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> RegistKakeiboItemAsync(RegistKakeiboItemRequest request)
         {
             try
@@ -239,6 +274,13 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 既存の家計簿アイテムを更新します。
+        /// アイテムの基本情報（カテゴリ、名称、金額、入出金フラグ、使用日）を更新します。
+        /// changeFlgがtrueの場合、紐づく繰り返し頻度情報も同時に更新されます（固定費の一括更新）。
+        /// </summary>
+        /// <param name="request">家計簿アイテム更新リクエスト（アイテムID、更新後の情報、一括変更フラグを含む）</param>
+        /// <returns>更新成功時は成功メッセージを含むApiResponse。アイテムまたはカテゴリが見つからない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateKakeiboItemAsync(UpdateKakeiboItemRequest request)
         {
             try
@@ -284,6 +326,12 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 指定された家計簿アイテムを削除します。
+        /// アイテムに紐づく繰り返し頻度情報も合わせて削除されます。
+        /// </summary>
+        /// <param name="request">家計簿アイテム削除リクエスト（削除対象のアイテムIDを含む）</param>
+        /// <returns>削除成功時は成功メッセージを含むApiResponse。削除失敗時はエラーメッセージを返却</returns>
         public async Task<IActionResult> DeleteKakeiboItemAsync(DeleteKakeiboItemRequest request)
         {
             try

@@ -14,6 +14,10 @@ namespace AiKakeiboBackend.Controllers
             _service = service;
         }
 
+        /// <summary>
+        /// アイコン一覧取得APIです。カテゴリに設定可能なアイコンの一覧を取得します。
+        /// </summary>
+        /// <returns>アイコン情報のリスト（IconId, IconName等）</returns>
         [HttpGet("GetIconList")]
         public async Task<IActionResult> GetIconListAsync()
         {

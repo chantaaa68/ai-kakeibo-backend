@@ -1,5 +1,5 @@
 using AiKakeiboBackend.Data;
-using AiKakeiboBackend.Services;
+using AiKakeiboBackend.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,22 +12,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// JWT サービスの登録
-builder.Services.AddScoped<JwtService>();
-
-// Repositories の登録
-builder.Services.AddScoped<AiKakeiboBackend.Repositories.IUserRepository, AiKakeiboBackend.Repositories.UserRepository>();
-builder.Services.AddScoped<AiKakeiboBackend.Repositories.ICategoryRepository, AiKakeiboBackend.Repositories.CategoryRepository>();
-builder.Services.AddScoped<AiKakeiboBackend.Repositories.IIconRepository, AiKakeiboBackend.Repositories.IconRepository>();
-builder.Services.AddScoped<AiKakeiboBackend.Repositories.IKakeiboRepository, AiKakeiboBackend.Repositories.KakeiboRepository>();
-builder.Services.AddScoped<AiKakeiboBackend.Repositories.INewsletterRepository, AiKakeiboBackend.Repositories.NewsletterRepository>();
-
-// Services の登録
-builder.Services.AddScoped<AiKakeiboBackend.Services.IUserService, AiKakeiboBackend.Services.UserService>();
-builder.Services.AddScoped<AiKakeiboBackend.Services.ICategoryService, AiKakeiboBackend.Services.CategoryService>();
-builder.Services.AddScoped<AiKakeiboBackend.Services.IIconService, AiKakeiboBackend.Services.IconService>();
-builder.Services.AddScoped<AiKakeiboBackend.Services.IKakeiboService, AiKakeiboBackend.Services.KakeiboService>();
-builder.Services.AddScoped<AiKakeiboBackend.Services.INewsletterService, AiKakeiboBackend.Services.NewsletterService>();
+// カスタム属性を利用した自動依存性注入登録
+// [Service]属性と[Repository]属性が付与されたクラスを自動的に登録
+builder.Services.AddAutoRegisteredServices();
 
 // Configure DbContext
 builder.Services.AddDbContext<KakeiboDbContext>(options =>

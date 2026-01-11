@@ -1,3 +1,4 @@
+using AiKakeiboBackend.Attributes;
 using AiKakeiboBackend.DTOs;
 using AiKakeiboBackend.Helpers;
 using AiKakeiboBackend.Models;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AiKakeiboBackend.Services
 {
+    [Service]
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
@@ -17,6 +19,12 @@ namespace AiKakeiboBackend.Services
             _jwtService = jwtService;
         }
 
+        /// <summary>
+        /// ユーザーのログイン処理を実行します。
+        /// メールアドレスとパスワードハッシュによる認証を行い、成功時にJWTトークンと家計簿情報を返却します。
+        /// </summary>
+        /// <param name="request">ログインリクエスト（メールアドレス、ユーザーハッシュを含む）</param>
+        /// <returns>ログイン成功時はユーザー情報、JWTトークン、家計簿情報を含むApiResponse。失敗時はエラーメッセージを含むApiResponse</returns>
         public async Task<IActionResult> LoginAsync(LoginRequest request)
         {
             try
@@ -57,6 +65,11 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 指定されたユーザーIDに基づいてユーザー情報と関連する家計簿情報を取得します。
+        /// </summary>
+        /// <param name="userId">取得対象のユーザーID</param>
+        /// <returns>ユーザー情報と家計簿情報を含むApiResponse。ユーザーまたは家計簿が存在しない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> GetUserDataAsync(int userId)
         {
             try
@@ -92,6 +105,13 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 新規ユーザーの登録処理を実行します。
+        /// ユーザー情報の作成、初期家計簿の作成、JWTトークンの発行を一連の流れで行います。
+        /// メールアドレスの重複チェックを実施し、既存の場合はエラーを返却します。
+        /// </summary>
+        /// <param name="request">ユーザー登録リクエスト（ユーザー名、メール、パスワードハッシュ、家計簿名等を含む）</param>
+        /// <returns>登録成功時はユーザー情報、JWTトークン、家計簿情報を含むApiResponse。失敗時はエラーメッセージを返却</returns>
         public async Task<IActionResult> RegistAsync(RegistUserRequest request)
         {
             try
@@ -145,6 +165,12 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// ユーザー情報と関連する家計簿情報の更新処理を実行します。
+        /// ユーザー名、メールアドレス、家計簿名、家計簿説明を更新します。
+        /// </summary>
+        /// <param name="request">ユーザー更新リクエスト（ユーザーID、更新後のユーザー名、メール、家計簿情報を含む）</param>
+        /// <returns>更新成功時は成功メッセージを含むApiResponse。ユーザーまたは家計簿が存在しない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateAsync(UpdateUserRequest request)
         {
             try
@@ -180,6 +206,12 @@ namespace AiKakeiboBackend.Services
             }
         }
 
+        /// <summary>
+        /// 指定されたユーザーIDのユーザーを削除します。
+        /// カスケード削除により関連する家計簿データも合わせて削除されます。
+        /// </summary>
+        /// <param name="request">ユーザー削除リクエスト（削除対象のユーザーIDを含む）</param>
+        /// <returns>削除成功時は成功メッセージを含むApiResponse。削除失敗時はエラーメッセージを返却</returns>
         public async Task<IActionResult> DeleteAsync(DeleteUserRequest request)
         {
             try

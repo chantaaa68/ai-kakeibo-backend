@@ -1,3 +1,4 @@
+using AiKakeiboBackend.Attributes;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -8,6 +9,7 @@ namespace AiKakeiboBackend.Services
     /// <summary>
     /// JWT トークン生成・検証サービス
     /// </summary>
+    [Service]
     public class JwtService
     {
         private readonly IConfiguration _configuration;
