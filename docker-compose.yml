@@ -1,7 +1,16 @@
-version: '3.8'
+version: '3.4'
 
 services:
-  # SQL Server データベース
+  ai-kakeibo-backend:
+    image: ${DOCKER_REGISTRY-}ai-kakeibo-backend
+    build:
+      context: .
+      dockerfile: src/AiKakeiboBackend/Dockerfile
+    depends_on:
+      - db
+    networks:
+      - ai-kakeibo-network
+
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: ai-kakeibo-db
@@ -21,25 +30,6 @@ services:
       timeout: 3s
       retries: 10
       start_period: 10s
-
-  # ASP.NET Core Web API
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ai-kakeibo-api
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__DefaultConnection=Server=db;Database=AiKakeiboDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;MultipleActiveResultSets=true
-    ports:
-      - "5000:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - ai-kakeibo-network
-    restart: on-failure
 
 volumes:
   sqlserver-data:
