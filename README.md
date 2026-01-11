@@ -9,24 +9,25 @@ AI駆動開発で作成された家計簿(Kakeibo)アプリケーションのバ
 - **Entity Framework Core 8.0** - O/Rマッピング
 - **SQL Server** - データベース
 - **Swagger/OpenAPI** - API仕様とドキュメント
+- **Docker** - コンテナ化
 
 ## プロジェクト構成
 
 ```
 src/AiKakeiboBackend/
 ├── Controllers/         # APIコントローラー
-│   ├── TransactionsController.cs
-│   ├── CategoriesController.cs
-│   └── BudgetsController.cs
 ├── Models/             # エンティティモデル
-│   ├── User.cs
+│   ├── Users.cs
+│   ├── Kakeibo.cs
 │   ├── Category.cs
-│   ├── Transaction.cs
-│   └── Budget.cs
+│   ├── CategoryDefault.cs
+│   ├── Icon.cs
+│   ├── KakeiboItem.cs
+│   ├── KakeiboItemFrequency.cs
+│   ├── NewsletterTemplate.cs
+│   └── Interface/
+│       └── KakeiboInterface.cs
 ├── DTOs/              # Data Transfer Objects
-│   ├── TransactionDto.cs
-│   ├── CategoryDto.cs
-│   └── BudgetDto.cs
 ├── Data/              # データベースコンテキスト
 │   └── KakeiboDbContext.cs
 └── Services/          # ビジネスロジック（今後追加予定）
@@ -34,31 +35,95 @@ src/AiKakeiboBackend/
 
 ## 主な機能
 
-### 1. 取引管理 (Transactions)
+### 1. ユーザー管理 (Users)
+- ユーザー登録
+- ユーザー情報の管理
+
+### 2. 家計簿管理 (Kakeibo)
+- 家計簿の作成
+- 家計簿情報の管理
+
+### 3. カテゴリー管理 (Category)
+- カスタムカテゴリーの作成
+- 収入/支出の区分
+- アイコンの設定
+
+### 4. 取引管理 (KakeiboItem)
 - 収入・支出の記録
 - カテゴリー別の分類
 - 日付範囲でのフィルタリング
-- CRUD操作
 
-### 2. カテゴリー管理 (Categories)
-- カスタムカテゴリーの作成
-- 収入/支出の区分
-- アイコンと色の設定
-- CRUD操作
-
-### 3. 予算管理 (Budgets)
-- 月次予算の設定
-- カテゴリー別の予算
-- CRUD操作
+### 5. 固定費管理 (KakeiboItemFrequency)
+- 固定費の登録
+- 固定費の頻度設定
 
 ## セットアップ
 
-### 必要な環境
+### Dockerを使用した起動（推奨）
 
+Dockerを使用することで、環境構築の手間を省き、すぐにアプリケーションを起動できます。
+
+#### 必要な環境
+- Docker
+- Docker Compose
+
+#### 起動手順
+
+1. リポジトリのクローン
+```bash
+git clone <repository-url>
+cd ai-kakeibo-backend
+```
+
+2. Docker Composeでアプリケーションを起動
+```bash
+docker-compose up -d
+```
+
+このコマンドにより、以下のサービスが起動します:
+- **db**: SQL Server 2022（ポート 1433）
+- **api**: ASP.NET Core Web API（ポート 5000）
+
+3. アプリケーションの確認
+
+ブラウザで以下のURLにアクセスしてSwagger UIを確認できます:
+- http://localhost:5000/swagger
+
+4. ログの確認
+```bash
+# すべてのログを表示
+docker-compose logs -f
+
+# APIのログのみ表示
+docker-compose logs -f api
+
+# DBのログのみ表示
+docker-compose logs -f db
+```
+
+5. 停止
+```bash
+docker-compose down
+```
+
+6. 停止してデータも削除
+```bash
+docker-compose down -v
+```
+
+#### データベース接続情報
+- **サーバー**: localhost,1433
+- **ユーザー名**: sa
+- **パスワード**: YourStrong@Passw0rd
+- **データベース名**: AiKakeiboDb
+
+### ローカル環境での起動
+
+#### 必要な環境
 - .NET 8.0 SDK
 - SQL Server または SQL Server LocalDB
 
-### データベース接続文字列の設定
+#### データベース接続文字列の設定
 
 `appsettings.json`ファイルの接続文字列を環境に合わせて変更してください。
 
@@ -70,7 +135,7 @@ src/AiKakeiboBackend/
 }
 ```
 
-### マイグレーションの実行
+#### マイグレーションの実行
 
 ```bash
 # マイグレーションの作成
@@ -80,7 +145,7 @@ dotnet ef migrations add InitialCreate --project src/AiKakeiboBackend
 dotnet ef database update --project src/AiKakeiboBackend
 ```
 
-### アプリケーションの実行
+#### アプリケーションの実行
 
 ```bash
 # ソリューションディレクトリから
@@ -95,29 +160,6 @@ dotnet run
 - https://localhost:5001/swagger
 - http://localhost:5000/swagger
 
-## API エンドポイント
-
-### Transactions
-- `GET /api/transactions` - 取引一覧の取得
-- `GET /api/transactions/{id}` - 特定の取引の取得
-- `POST /api/transactions?userId={userId}` - 新規取引の作成
-- `PUT /api/transactions/{id}` - 取引の更新
-- `DELETE /api/transactions/{id}` - 取引の削除
-
-### Categories
-- `GET /api/categories` - カテゴリー一覧の取得
-- `GET /api/categories/{id}` - 特定のカテゴリーの取得
-- `POST /api/categories?userId={userId}` - 新規カテゴリーの作成
-- `PUT /api/categories/{id}` - カテゴリーの更新
-- `DELETE /api/categories/{id}` - カテゴリーの削除
-
-### Budgets
-- `GET /api/budgets` - 予算一覧の取得
-- `GET /api/budgets/{id}` - 特定の予算の取得
-- `POST /api/budgets?userId={userId}` - 新規予算の作成
-- `PUT /api/budgets/{id}` - 予算の更新
-- `DELETE /api/budgets/{id}` - 予算の削除
-
 ## CORS設定
 
 フロントエンドからのリクエストを受け入れるため、以下のオリジンに対してCORSが有効になっています:
@@ -125,6 +167,45 @@ dotnet run
 - http://localhost:5173 (Vite用)
 
 必要に応じて`Program.cs`で設定を変更してください。
+
+## トラブルシューティング
+
+### Dockerコンテナが起動しない場合
+
+1. ポートが既に使用されていないか確認
+```bash
+# Windowsの場合
+netstat -ano | findstr :1433
+netstat -ano | findstr :5000
+
+# Linux/Macの場合
+lsof -i :1433
+lsof -i :5000
+```
+
+2. Dockerが起動しているか確認
+```bash
+docker ps
+```
+
+3. ログを確認してエラーメッセージを確認
+```bash
+docker-compose logs
+```
+
+### データベースマイグレーションのエラー
+
+アプリケーション起動時に自動的にマイグレーションが実行されますが、エラーが発生した場合は以下を試してください:
+
+1. コンテナを再起動
+```bash
+docker-compose restart api
+```
+
+2. データベースコンテナの状態を確認
+```bash
+docker-compose exec db /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P YourStrong@Passw0rd -Q "SELECT 1"
+```
 
 ## ライセンス
 

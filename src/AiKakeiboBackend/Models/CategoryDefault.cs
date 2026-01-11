@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AiKakeiboBackend.Models
 {
-    public class Category : KakeiboInterface
+    public class CategoryDefault : KakeiboInterface
     {
         [Key]
         [Required]
@@ -13,18 +13,13 @@ namespace AiKakeiboBackend.Models
         public int Id { get; set; }
 
         [Required]
-        [Comment("家計簿テーブルID")]
-        [ForeignKey(nameof(Kakeibo))]
-        public int KakeiboID { get; set; }
-
-        [Required]
         [Comment("カテゴリ名")]
         [MaxLength(20)]
-        public string CategoryName { get; set; } = null!;
+        public string KategoryName { get; set; } = null!;
 
         [Required]
         [Comment("出入金フラグ")]
-        public bool InoutFlg { get; set; }
+        public Boolean InoutFlg { get; set; }
 
         [Required]
         [Comment("アイコンID")]
@@ -42,8 +37,6 @@ namespace AiKakeiboBackend.Models
         [Comment("削除日時")]
         public DateTime? DeleteDate { get; set; }
 
-        public virtual Kakeibo Kakeibo { get; set; } = null!;
-
-        public virtual Icon Icon { get; set; } = null!;
+        public virtual required Icon Icon { get; set; } = null!;
     }
 }

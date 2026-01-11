@@ -10,58 +10,92 @@ public class KakeiboDbContext : DbContext
     {
     }
 
-    public DbSet<User> Users { get; set; } = null!;
+    public DbSet<Users> Users { get; set; } = null!;
+    public DbSet<Kakeibo> Kakeibos { get; set; } = null!;
     public DbSet<Category> Categories { get; set; } = null!;
-    public DbSet<Transaction> Transactions { get; set; } = null!;
-    public DbSet<Budget> Budgets { get; set; } = null!;
+    public DbSet<CategoryDefault> CategoryDefaults { get; set; } = null!;
+    public DbSet<Icon> Icons { get; set; } = null!;
+    public DbSet<KakeiboItem> KakeiboItems { get; set; } = null!;
+    public DbSet<KakeiboItemFrequency> KakeiboItemFrequencies { get; set; } = null!;
+    public DbSet<NewsletterTemplate> NewsletterTemplates { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        // User configuration
-        modelBuilder.Entity<User>()
+        // Users configuration
+        modelBuilder.Entity<Users>()
             .HasIndex(u => u.Email)
             .IsUnique();
 
+        modelBuilder.Entity<Users>()
+            .HasIndex(u => u.UserHash)
+            .IsUnique();
+
+        // Kakeibo configuration
+        modelBuilder.Entity<Kakeibo>()
+            .HasOne(k => k.User)
+            .WithMany(u => u.Kakeibos)
+            .HasForeignKey(k => k.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // Category configuration
         modelBuilder.Entity<Category>()
-            .HasOne(c => c.User)
-            .WithMany(u => u.Categories)
-            .HasForeignKey(c => c.UserId)
+            .HasOne(c => c.Kakeibo)
+            .WithMany(k => k.Categories)
+            .HasForeignKey(c => c.KakeiboID)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Transaction configuration
-        modelBuilder.Entity<Transaction>()
-            .HasOne(t => t.User)
-            .WithMany(u => u.Transactions)
-            .HasForeignKey(t => t.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        modelBuilder.Entity<Transaction>()
-            .HasOne(t => t.Category)
-            .WithMany(c => c.Transactions)
-            .HasForeignKey(t => t.CategoryId)
+        modelBuilder.Entity<Category>()
+            .HasOne(c => c.Icon)
+            .WithMany(i => i.Categories)
+            .HasForeignKey(c => c.IconId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Budget configuration
-        modelBuilder.Entity<Budget>()
-            .HasOne(b => b.User)
-            .WithMany(u => u.Budgets)
-            .HasForeignKey(b => b.UserId)
+        // CategoryDefault configuration
+        modelBuilder.Entity<CategoryDefault>()
+            .HasOne(cd => cd.Icon)
+            .WithMany(i => i.CategoryDefaults)
+            .HasForeignKey(cd => cd.IconId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // KakeiboItem configuration
+        modelBuilder.Entity<KakeiboItem>()
+            .HasOne(ki => ki.Kakeibo)
+            .WithMany(k => k.KakeiboItems)
+            .HasForeignKey(ki => ki.KakeiboId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Budget>()
-            .HasOne(b => b.Category)
-            .WithMany(c => c.Budgets)
-            .HasForeignKey(b => b.CategoryId)
+        modelBuilder.Entity<KakeiboItem>()
+            .HasOne(ki => ki.Category)
+            .WithMany()
+            .HasForeignKey(ki => ki.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<KakeiboItem>()
+            .HasOne(ki => ki.KakeiboItemFrequency)
+            .WithMany(kif => kif.KakeiboItems)
+            .HasForeignKey(ki => ki.FrequencyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // KakeiboItemFrequency configuration
+        modelBuilder.Entity<KakeiboItemFrequency>()
+            .HasOne(kif => kif.Kakeibo)
+            .WithMany(k => k.KakeiboItemFrequencies)
+            .HasForeignKey(kif => kif.KakeiboId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<KakeiboItemFrequency>()
+            .HasOne(kif => kif.Category)
+            .WithMany()
+            .HasForeignKey(kif => kif.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
         // Index for better query performance
-        modelBuilder.Entity<Transaction>()
-            .HasIndex(t => t.Date);
+        modelBuilder.Entity<KakeiboItem>()
+            .HasIndex(ki => ki.UsedDate);
 
-        modelBuilder.Entity<Budget>()
-            .HasIndex(b => new { b.Year, b.Month });
+        modelBuilder.Entity<Kakeibo>()
+            .HasIndex(k => k.UserId);
     }
 }

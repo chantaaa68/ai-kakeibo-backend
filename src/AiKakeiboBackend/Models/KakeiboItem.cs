@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AiKakeiboBackend.Models
 {
-    public class Category : KakeiboInterface
+    public class KakeiboItem : KakeiboInterface
     {
         [Key]
         [Required]
@@ -15,21 +15,34 @@ namespace AiKakeiboBackend.Models
         [Required]
         [Comment("家計簿テーブルID")]
         [ForeignKey(nameof(Kakeibo))]
-        public int KakeiboID { get; set; }
+        public int KakeiboId { get; set; }
 
         [Required]
-        [Comment("カテゴリ名")]
+        [Comment("カテゴリID")]
+        [ForeignKey(nameof(Category))]
+        public int CategoryId { get; set; }
+
+        [Required]
+        [Comment("名前")]
         [MaxLength(20)]
-        public string CategoryName { get; set; } = null!;
+        public string? ItemName { get; set; }
+
+        [Required]
+        [Comment("金額")]
+        public int ItemAmount { get; set; }
 
         [Required]
         [Comment("出入金フラグ")]
         public bool InoutFlg { get; set; }
 
         [Required]
-        [Comment("アイコンID")]
-        [ForeignKey(nameof(Icon))]
-        public int IconId { get; set; }
+        [Comment("出入金日付")]
+        public DateTime UsedDate { get; set; }
+
+        [Required]
+        [Comment("固定費管理ID")]
+        [ForeignKey(nameof(KakeiboItemFrequency))]
+        public int FrequencyId { get; set; }
 
         [Required]
         [Comment("登録日時")]
@@ -44,6 +57,8 @@ namespace AiKakeiboBackend.Models
 
         public virtual Kakeibo Kakeibo { get; set; } = null!;
 
-        public virtual Icon Icon { get; set; } = null!;
+        public virtual Category Category { get; set; } = null!;
+
+        public virtual KakeiboItemFrequency KakeiboItemFrequency { get; set; } = null!;
     }
 }
