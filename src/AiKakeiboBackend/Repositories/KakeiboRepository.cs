@@ -29,7 +29,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>家計簿ID（存在しない場合はnull）</returns>
         public async Task<int?> GetKakeiboIdAsync(int userId)
         {
-            Kakeibo? kakeibo = await _context.Kakeibos
+            Kakeibo? kakeibo = await _context.Kakeibo
                 .FirstOrDefaultAsync(k => k.UserId == userId && k.DeleteDate == null);
             return kakeibo?.Id;
         }
@@ -41,7 +41,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当する家計簿情報（存在しない場合はnull）</returns>
         public async Task<Kakeibo?> GetByIdAsync(int kakeiboId)
         {
-            return await _context.Kakeibos
+            return await _context.Kakeibo
                 .FirstOrDefaultAsync(k => k.Id == kakeiboId && k.DeleteDate == null);
         }
 
@@ -54,7 +54,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>家計簿項目のリスト</returns>
         public async Task<List<KakeiboItem>> GetItemsByKakeiboIdAndRangeAsync(int kakeiboId, DateTime? startDate, DateTime? endDate)
         {
-            IQueryable<KakeiboItem> query = _context.KakeiboItems
+            IQueryable<KakeiboItem> query = _context.KakeiboItem
                 .Include(i => i.Category)
                 .Include(i => i.KakeiboItemFrequency)
                 .Where(i => i.KakeiboId == kakeiboId && i.DeleteDate == null);
@@ -76,7 +76,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>家計簿項目のリスト</returns>
         public async Task<List<KakeiboItem>> GetItemsByKakeiboIdForMonthAsync(int kakeiboId, DateTime startOfMonth, DateTime endOfMonth)
         {
-            return await _context.KakeiboItems
+            return await _context.KakeiboItem
                 .Include(i => i.Category)
                 .Where(i => i.KakeiboId == kakeiboId
                             && i.DeleteDate == null
@@ -92,7 +92,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当する家計簿項目情報（存在しない場合はnull）</returns>
         public async Task<KakeiboItem?> GetItemByIdAsync(int itemId)
         {
-            return await _context.KakeiboItems
+            return await _context.KakeiboItem
                 .Include(i => i.Category)
                 .Include(i => i.KakeiboItemFrequency)
                 .FirstOrDefaultAsync(i => i.Id == itemId && i.DeleteDate == null);
@@ -105,7 +105,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当するカテゴリ情報（存在しない場合はnull）</returns>
         public async Task<Category?> GetCategoryByIdAsync(int categoryId)
         {
-            return await _context.Categories
+            return await _context.Category
                 .FirstOrDefaultAsync(c => c.Id == categoryId && c.DeleteDate == null);
         }
 
@@ -118,7 +118,7 @@ namespace AiKakeiboBackend.Repositories
         {
             item.CreateDate = DateTime.UtcNow;
             item.UpdateDate = DateTime.UtcNow;
-            _context.KakeiboItems.Add(item);
+            _context.KakeiboItem.Add(item);
             await _context.SaveChangesAsync();
         }
 
@@ -131,7 +131,7 @@ namespace AiKakeiboBackend.Repositories
         {
             frequency.CreateDate = DateTime.UtcNow;
             frequency.UpdateDate = DateTime.UtcNow;
-            _context.KakeiboItemFrequencies.Add(frequency);
+            _context.KakeiboItemFrequency.Add(frequency);
             await _context.SaveChangesAsync();
         }
 
@@ -153,7 +153,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>非同期処理タスク</returns>
         public async Task DeleteItemAsync(int itemId)
         {
-            KakeiboItem? item = await _context.KakeiboItems.FindAsync(itemId);
+            KakeiboItem? item = await _context.KakeiboItem.FindAsync(itemId);
             if (item != null)
             {
                 item.DeleteDate = DateTime.UtcNow;

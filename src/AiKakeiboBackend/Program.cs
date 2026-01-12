@@ -63,22 +63,6 @@ builder.Services.AddCors(options =>
 
 WebApplication app = builder.Build();
 
-// データベースマイグレーションを自動実行
-using (IServiceScope scope = app.Services.CreateScope())
-{
-    IServiceProvider services = scope.ServiceProvider;
-    try
-    {
-        KakeiboDbContext context = services.GetRequiredService<KakeiboDbContext>();
-        context.Database.Migrate();
-    }
-    catch (Exception ex)
-    {
-        ILogger<Program> logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "データベースマイグレーション中にエラーが発生しました。");
-    }
-}
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

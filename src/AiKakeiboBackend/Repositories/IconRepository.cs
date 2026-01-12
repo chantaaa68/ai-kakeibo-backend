@@ -28,7 +28,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>アイコン情報のリスト</returns>
         public async Task<List<Icon>> GetAllIconsAsync()
         {
-            return await _context.Icons
+            return await _context.Icon
                 .Where(i => i.DeleteDate == null)
                 .ToListAsync();
         }

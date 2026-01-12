@@ -31,7 +31,7 @@ namespace AiKakeiboBackend.Repositories
         public async Task<Users?> GetByEmailAndHashAsync(string email, string userHash)
         {
             return await _context.Users
-                .Include(u => u.Kakeibos.Where(k => k.DeleteDate == null))
+                .Include(u => u.Kakeibo.Where(k => k.DeleteDate == null))
                 .FirstOrDefaultAsync(u => u.Email == email
                                           && u.UserHash == userHash
                                           && u.DeleteDate == null);
@@ -45,7 +45,7 @@ namespace AiKakeiboBackend.Repositories
         public async Task<Users?> GetByIdAsync(int userId)
         {
             return await _context.Users
-                .Include(u => u.Kakeibos.Where(k => k.DeleteDate == null))
+                .Include(u => u.Kakeibo.Where(k => k.DeleteDate == null))
                 .FirstOrDefaultAsync(u => u.Id == userId && u.DeleteDate == null);
         }
 
@@ -108,7 +108,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当する家計簿情報（存在しない場合はnull）</returns>
         public async Task<Kakeibo?> GetKakeiboByUserIdAsync(int userId)
         {
-            return await _context.Kakeibos
+            return await _context.Kakeibo
                 .FirstOrDefaultAsync(k => k.UserId == userId && k.DeleteDate == null);
         }
 
@@ -121,7 +121,7 @@ namespace AiKakeiboBackend.Repositories
         {
             kakeibo.CreateDate = DateTime.UtcNow;
             kakeibo.UpdateDate = DateTime.UtcNow;
-            _context.Kakeibos.Add(kakeibo);
+            _context.Kakeibo.Add(kakeibo);
             await _context.SaveChangesAsync();
             return kakeibo;
         }

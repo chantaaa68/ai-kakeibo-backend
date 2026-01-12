@@ -9,9 +9,9 @@ namespace AiKakeiboBackend.Models
     {
         public Kakeibo()
         {
-            KakeiboItems = new HashSet<KakeiboItem>();
-            Categories = new HashSet<Category>();
-            KakeiboItemFrequencies = new HashSet<KakeiboItemFrequency>();
+            KakeiboItem = new HashSet<KakeiboItem>();
+            Category = new HashSet<Category>();
+            KakeiboItemFrequency = new HashSet<KakeiboItemFrequency>();
         }
 
         [Key]
@@ -46,10 +46,10 @@ namespace AiKakeiboBackend.Models
 
         public virtual Users User { get; set; } = null!;
 
-        public virtual ICollection<KakeiboItem> KakeiboItems { get; set; }
+        public virtual ICollection<KakeiboItem> KakeiboItem { get; set; }
 
-        public virtual ICollection<Category> Categories { get; set; }
+        public virtual ICollection<Category> Category { get; set; }
 
-        public virtual ICollection<KakeiboItemFrequency> KakeiboItemFrequencies { get; set; }
+        public virtual ICollection<KakeiboItemFrequency> KakeiboItemFrequency { get; set; }
     }
 }

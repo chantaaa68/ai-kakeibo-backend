@@ -30,7 +30,7 @@ namespace AiKakeiboBackend.Models
         [Comment("削除日時")]
         public DateTime? DeleteDate { get; set; }
 
-        public virtual ICollection<Category> Categories { get; set; } = new List<Category>();
-        public virtual ICollection<CategoryDefault> CategoryDefaults { get; set; } = new List<CategoryDefault>();
+        public virtual ICollection<Category> Category { get; set; } = new List<Category>();
+        public virtual ICollection<CategoryDefault> CategoryDefault { get; set; } = new List<CategoryDefault>();
     }
 }
