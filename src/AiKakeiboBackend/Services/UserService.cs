@@ -154,9 +154,9 @@ namespace AiKakeiboBackend.Services
 
         /// <summary>
         /// ユーザー情報と関連する家計簿情報の更新処理を実行します。
-        /// ユーザー名、メールアドレス、家計簿名、家計簿説明を更新します。
+        /// ユーザー名、メールアドレス、パスワードハッシュ、家計簿名、家計簿説明を更新します。
         /// </summary>
-        /// <param name="request">ユーザー更新リクエスト（ユーザーID、更新後のユーザー名、メール、家計簿情報を含む）</param>
+        /// <param name="request">ユーザー更新リクエスト（ユーザーID、更新後のユーザー名、メール、パスワードハッシュ、家計簿情報を含む）</param>
         /// <returns>更新成功時は成功メッセージを含むApiResponse。ユーザーまたは家計簿が存在しない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> UpdateAsync(UpdateUserRequest request)
         {
@@ -177,6 +177,10 @@ namespace AiKakeiboBackend.Services
                 if (request.Email != null)
                 {
                     user.Email = request.Email;
+                }
+                if (request.UserHash != null)
+                {
+                    user.UserHash = request.UserHash;
                 }
                 await _userRepository.UpdateUserAsync(user);
 
