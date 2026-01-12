@@ -17,7 +17,7 @@ namespace AiKakeiboBackend.Extensions
         public static IServiceCollection AddAutoRegisteredServices(this IServiceCollection services)
         {
             // 現在のアセンブリを取得
-            var assembly = Assembly.GetExecutingAssembly();
+            Assembly assembly = Assembly.GetExecutingAssembly();
 
             // ServiceAttribute が付与されたクラスを登録
             RegisterAttributedClasses(services, assembly, typeof(ServiceAttribute));
@@ -37,13 +37,13 @@ namespace AiKakeiboBackend.Extensions
         private static void RegisterAttributedClasses(IServiceCollection services, Assembly assembly, Type attributeType)
         {
             // 属性が付与されたクラスを取得
-            var types = assembly.GetTypes()
+            IEnumerable<Type> types = assembly.GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract && t.GetCustomAttribute(attributeType) != null);
 
-            foreach (var implementationType in types)
+            foreach (Type implementationType in types)
             {
                 // クラスが実装しているインターフェースを取得（自分自身のインターフェースのみ）
-                var interfaceType = implementationType.GetInterfaces()
+                Type? interfaceType = implementationType.GetInterfaces()
                     .FirstOrDefault(i => i.Name == $"I{implementationType.Name}");
 
                 if (interfaceType != null)

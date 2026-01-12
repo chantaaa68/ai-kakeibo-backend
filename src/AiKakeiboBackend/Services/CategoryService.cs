@@ -30,16 +30,16 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var categories = new List<CategoryItem>();
+                List<CategoryItem> categories = new List<CategoryItem>();
 
                 // ユーザー固有のカテゴリを取得（DefaultFlgがfalseの場合）
                 if (!request.DefaultFlg)
                 {
-                    var kakeibo = await _userRepository.GetKakeiboByUserIdAsync(request.UserId);
+                    Kakeibo? kakeibo = await _userRepository.GetKakeiboByUserIdAsync(request.UserId);
 
                     if (kakeibo != null)
                     {
-                        var userCategories = await _categoryRepository.GetCategoriesByKakeiboIdAsync(kakeibo.Id);
+                        List<Category> userCategories = await _categoryRepository.GetCategoriesByKakeiboIdAsync(kakeibo.Id);
                         categories.AddRange(userCategories.Select(c => new CategoryItem
                         {
                             Id = c.Id,
@@ -53,17 +53,17 @@ namespace AiKakeiboBackend.Services
                 // デフォルトカテゴリを取得（DefaultFlgがtrueの場合）
                 if (request.DefaultFlg)
                 {
-                    var defaultCategories = await _categoryRepository.GetDefaultCategoriesAsync();
+                    List<CategoryDefault> defaultCategories = await _categoryRepository.GetDefaultCategoriesAsync();
                     categories.AddRange(defaultCategories.Select(c => new CategoryItem
                     {
                         Id = c.Id,
-                        CategoryName = c.CategoryName,
+                        CategoryName = c.Icon.DefaultIconName,
                         InoutFlg = c.InoutFlg,
                         IconName = c.Icon?.OfficialIconName ?? string.Empty
                     }));
                 }
 
-                var response = new GetCategoryDataResponse
+                GetCategoryDataResponse response = new GetCategoryDataResponse
                 {
                     Categories = categories
                 };
@@ -87,7 +87,7 @@ namespace AiKakeiboBackend.Services
             try
             {
                 // UserIdからKakeiboIdを取得
-                var kakeibo = await _userRepository.GetKakeiboByUserIdAsync(request.UserId);
+                Kakeibo? kakeibo = await _userRepository.GetKakeiboByUserIdAsync(request.UserId);
 
                 if (kakeibo == null)
                 {
@@ -95,7 +95,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // IconNameからIconを取得
-                var icon = await _categoryRepository.GetIconByNameAsync(request.IconName);
+                Icon? icon = await _categoryRepository.GetIconByNameAsync(request.IconName);
 
                 if (icon == null)
                 {
@@ -103,7 +103,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // カテゴリ作成
-                var category = new Category
+                Category category = new Category
                 {
                     KakeiboID = kakeibo.Id,
                     CategoryName = request.CategoryName,
@@ -113,7 +113,7 @@ namespace AiKakeiboBackend.Services
 
                 await _categoryRepository.CreateCategoryAsync(category);
 
-                var response = new RegistCategoryResponse
+                RegistCategoryResponse response = new RegistCategoryResponse
                 {
                     CategoryId = category.Id
                 };
@@ -137,7 +137,7 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var category = await _categoryRepository.GetByIdAsync(request.Id);
+                Category? category = await _categoryRepository.GetByIdAsync(request.Id);
 
                 if (category == null)
                 {
@@ -159,7 +159,7 @@ namespace AiKakeiboBackend.Services
                 // アイコンの更新
                 if (!string.IsNullOrEmpty(request.IconName))
                 {
-                    var icon = await _categoryRepository.GetIconByNameAsync(request.IconName);
+                    Icon? icon = await _categoryRepository.GetIconByNameAsync(request.IconName);
 
                     if (icon == null)
                     {
@@ -171,7 +171,7 @@ namespace AiKakeiboBackend.Services
 
                 await _categoryRepository.UpdateCategoryAsync(category);
 
-                var response = new UpdateCategoryResponse
+                UpdateCategoryResponse response = new UpdateCategoryResponse
                 {
                     CategoryId = category.Id
                 };

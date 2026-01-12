@@ -27,7 +27,7 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var newsletter = new NewsletterTemplate
+                NewsletterTemplate newsletter = new NewsletterTemplate
                 {
                     MailTitle = request.Title ?? string.Empty,
                     MailBody = request.MailBody ?? string.Empty
@@ -35,7 +35,7 @@ namespace AiKakeiboBackend.Services
 
                 await _newsletterRepository.CreateNewsletterAsync(newsletter);
 
-                var response = new RigistNewsletterResponse
+                RigistNewsletterResponse response = new RigistNewsletterResponse
                 {
                     Count = 1
                 };
@@ -58,7 +58,7 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var newsletter = await _newsletterRepository.GetByIdAsync(request.Id);
+                NewsletterTemplate? newsletter = await _newsletterRepository.GetByIdAsync(request.Id);
 
                 if (newsletter == null)
                 {
@@ -70,7 +70,7 @@ namespace AiKakeiboBackend.Services
 
                 await _newsletterRepository.UpdateNewsletterAsync(newsletter);
 
-                var response = new UpdateNewsletterResponse
+                UpdateNewsletterResponse response = new UpdateNewsletterResponse
                 {
                     Count = 1
                 };
@@ -95,7 +95,7 @@ namespace AiKakeiboBackend.Services
             try
             {
                 // ニュースレターテンプレート取得
-                var newsletter = await _newsletterRepository.GetByIdAsync(request.NewsletterId);
+                NewsletterTemplate? newsletter = await _newsletterRepository.GetByIdAsync(request.NewsletterId);
 
                 if (newsletter == null)
                 {
@@ -103,7 +103,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // ユーザー情報取得
-                var user = await _newsletterRepository.GetUserByIdAsync(request.UserId);
+                Users? user = await _newsletterRepository.GetUserByIdAsync(request.UserId);
 
                 if (user == null)
                 {
@@ -111,7 +111,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // アイテム情報取得
-                var item = await _newsletterRepository.GetItemByIdAsync(request.ItemId);
+                KakeiboItem? item = await _newsletterRepository.GetItemByIdAsync(request.ItemId);
 
                 if (item == null)
                 {
@@ -120,7 +120,7 @@ namespace AiKakeiboBackend.Services
 
                 // メール送信処理
                 // 注意: 実際のメール送信処理はここで実装する必要があります
-                var mailContent = newsletter.MailBody
+                string mailContent = newsletter.MailBody
                     .Replace("{UserName}", user.Name)
                     .Replace("{ItemName}", item.ItemName ?? string.Empty)
                     .Replace("{ItemAmount}", item.ItemAmount.ToString());
@@ -128,7 +128,7 @@ namespace AiKakeiboBackend.Services
                 // TODO: 実際のメール送信処理を実装
                 // 例: await _emailService.SendAsync(user.Email, newsletter.MailTitle, mailContent);
 
-                var response = new SendNewsletterResponse
+                SendNewsletterResponse response = new SendNewsletterResponse
                 {
                     SendCount = 1
                 };

@@ -1,6 +1,7 @@
 using AiKakeiboBackend.Attributes;
 using AiKakeiboBackend.DTOs;
 using AiKakeiboBackend.Helpers;
+using AiKakeiboBackend.Models;
 using AiKakeiboBackend.Repositories;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,9 +26,9 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var icons = await _iconRepository.GetAllIconsAsync();
+                List<Icon> icons = await _iconRepository.GetAllIconsAsync();
 
-                var response = new GetIconListResponse
+                GetIconListResponse response = new GetIconListResponse
                 {
                     IconDatas = icons.Select(i => new IconData
                     {

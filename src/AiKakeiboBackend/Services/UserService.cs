@@ -30,7 +30,7 @@ namespace AiKakeiboBackend.Services
             try
             {
                 // ユーザー検索 (メールアドレスとハッシュ値で認証)
-                var user = await _userRepository.GetByEmailAndHashAsync(request.Email, request.UserHash);
+                Users? user = await _userRepository.GetByEmailAndHashAsync(request.Email, request.UserHash);
 
                 if (user == null)
                 {
@@ -38,16 +38,16 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // 最初のKakeiboを取得
-                var kakeibo = user.Kakeibos.FirstOrDefault();
+                Kakeibo? kakeibo = user.Kakeibos.FirstOrDefault();
                 if (kakeibo == null)
                 {
                     return ApiResponseHelper.Fail("家計簿が見つかりません");
                 }
 
                 // JWTトークンを生成
-                var token = _jwtService.GenerateToken(user.Id, user.Email);
+                string token = _jwtService.GenerateToken(user.Id, user.Email);
 
-                var response = new LoginResponse
+                LoginResponse response = new LoginResponse
                 {
                     UserId = user.Id,
                     Token = token,
@@ -71,20 +71,20 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var user = await _userRepository.GetByIdAsync(request.UserId);
+                Users? user = await _userRepository.GetByIdAsync(request.UserId);
 
                 if (user == null)
                 {
                     return ApiResponseHelper.Fail("ユーザーが見つかりません");
                 }
 
-                var kakeibo = user.Kakeibos.FirstOrDefault();
+                Kakeibo? kakeibo = user.Kakeibos.FirstOrDefault();
                 if (kakeibo == null)
                 {
                     return ApiResponseHelper.Fail("家計簿が見つかりません");
                 }
 
-                var response = new GetUserDataResponse
+                GetUserDataResponse response = new GetUserDataResponse
                 {
                     UserName = user.Name,
                     Email = user.Email,
@@ -112,7 +112,7 @@ namespace AiKakeiboBackend.Services
             try
             {
                 // メールアドレス重複チェック
-                var existingUser = await _userRepository.GetByEmailAsync(request.Email);
+                Users? existingUser = await _userRepository.GetByEmailAsync(request.Email);
 
                 if (existingUser != null)
                 {
@@ -120,7 +120,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // ユーザー作成
-                var user = new Users
+                Users user = new Users
                 {
                     Name = request.UserName,
                     UserHash = request.UserHash,
@@ -130,7 +130,7 @@ namespace AiKakeiboBackend.Services
                 await _userRepository.CreateUserAsync(user);
 
                 // 家計簿作成
-                var kakeibo = new Kakeibo
+                Kakeibo kakeibo = new Kakeibo
                 {
                     UserId = user.Id,
                     KakeiboName = request.KakeiboName,
@@ -139,7 +139,7 @@ namespace AiKakeiboBackend.Services
 
                 await _userRepository.CreateKakeiboAsync(kakeibo);
 
-                var response = new RegistUserResponse
+                RegistUserResponse response = new RegistUserResponse
                 {
                     UserId = user.Id
                 };
@@ -162,7 +162,7 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var user = await _userRepository.GetByIdAsync(request.UserId);
+                Users? user = await _userRepository.GetByIdAsync(request.UserId);
 
                 if (user == null)
                 {
@@ -183,7 +183,7 @@ namespace AiKakeiboBackend.Services
                 // 家計簿情報更新（家計簿関連のプロパティが指定されている場合）
                 if (request.KakeiboName != null || request.KakeiboExplanation != null)
                 {
-                    var kakeibo = user.Kakeibos.FirstOrDefault();
+                    Kakeibo? kakeibo = user.Kakeibos.FirstOrDefault();
                     if (kakeibo == null)
                     {
                         return ApiResponseHelper.Fail("家計簿が見つかりません");
@@ -220,7 +220,7 @@ namespace AiKakeiboBackend.Services
             {
                 await _userRepository.DeleteUserAsync(request.UserId);
 
-                var response = new DeleteUserResponse
+                DeleteUserResponse response = new DeleteUserResponse
                 {
                     UserId = request.UserId
                 };

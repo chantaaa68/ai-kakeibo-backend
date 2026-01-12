@@ -29,7 +29,7 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var kakeibo = await _kakeiboRepository.GetByIdAsync(request.Id);
+                Kakeibo? kakeibo = await _kakeiboRepository.GetByIdAsync(request.Id);
 
                 if (kakeibo == null)
                 {
@@ -48,7 +48,7 @@ namespace AiKakeiboBackend.Services
 
                 await _userRepository.UpdateKakeiboAsync(kakeibo);
 
-                var response = new UpdateKakeiboResponse
+                UpdateKakeiboResponse response = new UpdateKakeiboResponse
                 {
                     Count = 1
                 };
@@ -79,15 +79,15 @@ namespace AiKakeiboBackend.Services
                     return ApiResponseHelper.Fail("家計簿が存在しません");
                 }
 
-                var now = DateTime.UtcNow;
-                var startOfMonth = new DateTime(now.Year, now.Month, 1);
-                var endOfMonth = startOfMonth.AddMonths(1);
+                DateTime now = DateTime.UtcNow;
+                DateTime startOfMonth = new DateTime(now.Year, now.Month, 1);
+                DateTime endOfMonth = startOfMonth.AddMonths(1);
 
                 // 当月のアイテムを取得
-                var items = await _kakeiboRepository.GetItemsByKakeiboIdForMonthAsync(kakeiboId.Value, startOfMonth, endOfMonth);
+                List<KakeiboItem> items = await _kakeiboRepository.GetItemsByKakeiboIdForMonthAsync(kakeiboId.Value, startOfMonth, endOfMonth);
 
                 // 支出のカテゴリ別集計
-                var expenseCategories = items
+                List<CategoryReportItem> expenseCategories = items
                     .Where(i => !i.InoutFlg)
                     .GroupBy(i => new { i.Category.CategoryName, i.Category.Icon.OfficialIconName })
                     .Select(g => new CategoryReportItem
@@ -99,7 +99,7 @@ namespace AiKakeiboBackend.Services
                     .ToList();
 
                 // 収入のカテゴリ別集計
-                var incomeCategories = items
+                List<CategoryReportItem> incomeCategories = items
                     .Where(i => i.InoutFlg)
                     .GroupBy(i => new { i.Category.CategoryName, i.Category.Icon.OfficialIconName })
                     .Select(g => new CategoryReportItem
@@ -110,7 +110,7 @@ namespace AiKakeiboBackend.Services
                     })
                     .ToList();
 
-                var response = new GetMonthlyResultResponse
+                GetMonthlyResultResponse response = new GetMonthlyResultResponse
                 {
                     MonthlyExpenses = new List<MonthlyReportItem>
                     {
@@ -162,7 +162,7 @@ namespace AiKakeiboBackend.Services
 
                 if (!string.IsNullOrEmpty(request.Range))
                 {
-                    var parts = request.Range.Split('-');
+                    string[] parts = request.Range.Split('-');
                     if (parts.Length >= 2)
                     {
                         int year = int.Parse(parts[0]);
@@ -172,10 +172,10 @@ namespace AiKakeiboBackend.Services
                     }
                 }
 
-                var items = await _kakeiboRepository.GetItemsByKakeiboIdAndRangeAsync(kakeiboId.Value, startDate, endDate);
+                List<KakeiboItem> itemList = await _kakeiboRepository.GetItemsByKakeiboIdAndRangeAsync(kakeiboId.Value, startDate, endDate);
 
                 // 日付でグループ化
-                var groupedItems = items
+                List<KakeiboItemInfo> groupedItems = itemList
                     .GroupBy(i => i.UsedDate.Day)
                     .Select(g => new KakeiboItemInfo
                     {
@@ -193,7 +193,7 @@ namespace AiKakeiboBackend.Services
                     .OrderBy(x => x.DayNo)
                     .ToList();
 
-                var response = new GetKakeiboItemListResponse
+                GetKakeiboItemListResponse response = new GetKakeiboItemListResponse
                 {
                     KakeiboItemInfos = groupedItems
                 };
@@ -216,14 +216,14 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var item = await _kakeiboRepository.GetItemByIdAsync(request.ItemId);
+                KakeiboItem? item = await _kakeiboRepository.GetItemByIdAsync(request.ItemId);
 
                 if (item == null)
                 {
                     return ApiResponseHelper.Fail("アイテムが見つかりません");
                 }
 
-                var response = new GetKakeiboItemDetailResponse
+                GetKakeiboItemDetailResponse response = new GetKakeiboItemDetailResponse
                 {
                     ItemName = item.ItemName ?? string.Empty,
                     ItemAmount = item.ItemAmount,
@@ -252,7 +252,7 @@ namespace AiKakeiboBackend.Services
             try
             {
                 // KakeiboIdの検証
-                var kakeibo = await _kakeiboRepository.GetByIdAsync(request.KakeiboId);
+                Kakeibo? kakeibo = await _kakeiboRepository.GetByIdAsync(request.KakeiboId);
 
                 if (kakeibo == null)
                 {
@@ -260,7 +260,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // カテゴリの検証
-                var category = await _kakeiboRepository.GetCategoryByIdAsync(request.CategoryId);
+                Category? category = await _kakeiboRepository.GetCategoryByIdAsync(request.CategoryId);
 
                 if (category == null)
                 {
@@ -268,7 +268,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // KakeiboItemFrequency作成
-                var frequency = new KakeiboItemFrequency
+                KakeiboItemFrequency frequency = new KakeiboItemFrequency
                 {
                     KakeiboId = request.KakeiboId,
                     CategoryId = request.CategoryId,
@@ -283,7 +283,7 @@ namespace AiKakeiboBackend.Services
                 await _kakeiboRepository.CreateFrequencyAsync(frequency);
 
                 // KakeiboItem作成
-                var item = new KakeiboItem
+                KakeiboItem newItem = new KakeiboItem
                 {
                     KakeiboId = request.KakeiboId,
                     CategoryId = request.CategoryId,
@@ -294,9 +294,9 @@ namespace AiKakeiboBackend.Services
                     FrequencyId = frequency.Id
                 };
 
-                await _kakeiboRepository.CreateItemAsync(item);
+                await _kakeiboRepository.CreateItemAsync(newItem);
 
-                var response = new RegistKakeiboItemResponse
+                RegistKakeiboItemResponse response = new RegistKakeiboItemResponse
                 {
                     Count = 1
                 };
@@ -320,7 +320,7 @@ namespace AiKakeiboBackend.Services
         {
             try
             {
-                var item = await _kakeiboRepository.GetItemByIdAsync(request.ItemId);
+                KakeiboItem? item = await _kakeiboRepository.GetItemByIdAsync(request.ItemId);
 
                 if (item == null)
                 {
@@ -328,7 +328,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // カテゴリの検証
-                var category = await _kakeiboRepository.GetCategoryByIdAsync(request.CategoryId);
+                Category? category = await _kakeiboRepository.GetCategoryByIdAsync(request.CategoryId);
 
                 if (category == null)
                 {
@@ -353,7 +353,7 @@ namespace AiKakeiboBackend.Services
 
                 await _kakeiboRepository.UpdateItemAsync(item);
 
-                var response = new UpdateKakeiboItemResponse
+                UpdateKakeiboItemResponse response = new UpdateKakeiboItemResponse
                 {
                     Count = 1
                 };
@@ -378,7 +378,7 @@ namespace AiKakeiboBackend.Services
             {
                 await _kakeiboRepository.DeleteItemAsync(request.Id);
 
-                var response = new DeleteKakeiboItemResponse
+                DeleteKakeiboItemResponse response = new DeleteKakeiboItemResponse
                 {
                     Count = 1
                 };

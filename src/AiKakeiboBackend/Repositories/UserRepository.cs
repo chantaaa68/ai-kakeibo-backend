@@ -92,7 +92,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>非同期処理タスク</returns>
         public async Task DeleteUserAsync(int userId)
         {
-            var user = await _context.Users.FindAsync(userId);
+            Users? user = await _context.Users.FindAsync(userId);
             if (user != null)
             {
                 user.DeleteDate = DateTime.UtcNow;

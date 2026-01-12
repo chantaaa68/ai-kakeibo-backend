@@ -29,7 +29,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>家計簿ID（存在しない場合はnull）</returns>
         public async Task<int?> GetKakeiboIdAsync(int userId)
         {
-            var kakeibo = await _context.Kakeibos
+            Kakeibo? kakeibo = await _context.Kakeibos
                 .FirstOrDefaultAsync(k => k.UserId == userId && k.DeleteDate == null);
             return kakeibo?.Id;
         }
@@ -54,7 +54,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>家計簿項目のリスト</returns>
         public async Task<List<KakeiboItem>> GetItemsByKakeiboIdAndRangeAsync(int kakeiboId, DateTime? startDate, DateTime? endDate)
         {
-            var query = _context.KakeiboItems
+            IQueryable<KakeiboItem> query = _context.KakeiboItems
                 .Include(i => i.Category)
                 .Include(i => i.KakeiboItemFrequency)
                 .Where(i => i.KakeiboId == kakeiboId && i.DeleteDate == null);
@@ -153,7 +153,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>非同期処理タスク</returns>
         public async Task DeleteItemAsync(int itemId)
         {
-            var item = await _context.KakeiboItems.FindAsync(itemId);
+            KakeiboItem? item = await _context.KakeiboItems.FindAsync(itemId);
             if (item != null)
             {
                 item.DeleteDate = DateTime.UtcNow;
