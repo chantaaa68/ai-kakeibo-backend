@@ -8,7 +8,6 @@ services:
       dockerfile: src/AiKakeiboBackend/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
     ports:
       - "5000:8080"
     networks:
