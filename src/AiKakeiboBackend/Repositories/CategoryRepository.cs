@@ -30,7 +30,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>カテゴリ情報のリスト</returns>
         public async Task<List<Category>> GetCategoriesByKakeiboIdAsync(int kakeiboId)
         {
-            return await _context.Categories
+            return await _context.Category
                 .Include(c => c.Icon)
                 .Where(c => c.KakeiboID == kakeiboId && c.DeleteDate == null)
                 .ToListAsync();
@@ -42,7 +42,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>デフォルトカテゴリ情報のリスト</returns>
         public async Task<List<CategoryDefault>> GetDefaultCategoriesAsync()
         {
-            return await _context.CategoryDefaults
+            return await _context.CategoryDefault
                 .Include(c => c.Icon)
                 .Where(c => c.DeleteDate == null)
                 .ToListAsync();
@@ -55,7 +55,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当するカテゴリ情報（存在しない場合はnull）</returns>
         public async Task<Category?> GetByIdAsync(int categoryId)
         {
-            return await _context.Categories
+            return await _context.Category
                 .FirstOrDefaultAsync(c => c.Id == categoryId && c.DeleteDate == null);
         }
 
@@ -66,7 +66,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当するアイコン情報（存在しない場合はnull）</returns>
         public async Task<Icon?> GetIconByNameAsync(string iconName)
         {
-            return await _context.Icons
+            return await _context.Icon
                 .FirstOrDefaultAsync(i => i.DefaultIconName == iconName && i.DeleteDate == null);
         }
 
@@ -79,7 +79,7 @@ namespace AiKakeiboBackend.Repositories
         {
             category.CreateDate = DateTime.UtcNow;
             category.UpdateDate = DateTime.UtcNow;
-            _context.Categories.Add(category);
+            _context.Category.Add(category);
             await _context.SaveChangesAsync();
         }
 

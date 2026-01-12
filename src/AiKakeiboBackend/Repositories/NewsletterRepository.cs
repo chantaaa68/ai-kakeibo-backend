@@ -29,7 +29,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当するニュースレターテンプレート情報（存在しない場合はnull）</returns>
         public async Task<NewsletterTemplate?> GetByIdAsync(int id)
         {
-            return await _context.NewsletterTemplates
+            return await _context.NewsletterTemplate
                 .FirstOrDefaultAsync(n => n.Id == id && n.DeleteDate == null);
         }
 
@@ -42,7 +42,7 @@ namespace AiKakeiboBackend.Repositories
         {
             newsletter.CreateDate = DateTime.UtcNow;
             newsletter.UpdateDate = DateTime.UtcNow;
-            _context.NewsletterTemplates.Add(newsletter);
+            _context.NewsletterTemplate.Add(newsletter);
             await _context.SaveChangesAsync();
         }
 
@@ -75,7 +75,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当する家計簿項目情報（存在しない場合はnull）</returns>
         public async Task<KakeiboItem?> GetItemByIdAsync(int itemId)
         {
-            return await _context.KakeiboItems
+            return await _context.KakeiboItem
                 .Include(i => i.Category)
                 .FirstOrDefaultAsync(i => i.Id == itemId && i.DeleteDate == null);
         }

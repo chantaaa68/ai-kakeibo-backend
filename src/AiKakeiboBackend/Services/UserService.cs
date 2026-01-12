@@ -38,7 +38,7 @@ namespace AiKakeiboBackend.Services
                 }
 
                 // 最初のKakeiboを取得
-                Kakeibo? kakeibo = user.Kakeibos.FirstOrDefault();
+                Kakeibo? kakeibo = user.Kakeibo.FirstOrDefault();
                 if (kakeibo == null)
                 {
                     return ApiResponseHelper.Fail("家計簿が見つかりません");
@@ -78,7 +78,7 @@ namespace AiKakeiboBackend.Services
                     return ApiResponseHelper.Fail("ユーザーが見つかりません");
                 }
 
-                Kakeibo? kakeibo = user.Kakeibos.FirstOrDefault();
+                Kakeibo? kakeibo = user.Kakeibo.FirstOrDefault();
                 if (kakeibo == null)
                 {
                     return ApiResponseHelper.Fail("家計簿が見つかりません");
@@ -183,7 +183,7 @@ namespace AiKakeiboBackend.Services
                 // 家計簿情報更新（家計簿関連のプロパティが指定されている場合）
                 if (request.KakeiboName != null || request.KakeiboExplanation != null)
                 {
-                    Kakeibo? kakeibo = user.Kakeibos.FirstOrDefault();
+                    Kakeibo? kakeibo = user.Kakeibo.FirstOrDefault();
                     if (kakeibo == null)
                     {
                         return ApiResponseHelper.Fail("家計簿が見つかりません");

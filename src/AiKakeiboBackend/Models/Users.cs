@@ -28,6 +28,6 @@ namespace AiKakeiboBackend.Models
         [Comment("削除日時")]
         public DateTime? DeleteDate { get; set; }
 
-        public virtual ICollection<Kakeibo> Kakeibos { get; set; } = new List<Kakeibo>();
+        public virtual ICollection<Kakeibo> Kakeibo { get; set; } = new List<Kakeibo>();
     }
 }

@@ -29,7 +29,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>取引データのリスト</returns>
         public async Task<List<KakeiboItem>> GetItemsByCategoryIdAsync(int categoryId)
         {
-            return await _context.KakeiboItems
+            return await _context.KakeiboItem
                 .Include(i => i.Category)
                 .Where(i => i.CategoryId == categoryId && i.DeleteDate == null)
                 .OrderBy(i => i.UsedDate)
@@ -45,7 +45,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>取引データのリスト</returns>
         public async Task<List<KakeiboItem>> GetItemsByCategoryIdAndRangeAsync(int categoryId, DateTime startDate, DateTime endDate)
         {
-            return await _context.KakeiboItems
+            return await _context.KakeiboItem
                 .Include(i => i.Category)
                 .Where(i => i.CategoryId == categoryId
                             && i.DeleteDate == null
@@ -62,7 +62,7 @@ namespace AiKakeiboBackend.Repositories
         /// <returns>該当するカテゴリ情報（存在しない場合はnull）</returns>
         public async Task<Category?> GetCategoryByIdAsync(int categoryId)
         {
-            return await _context.Categories
+            return await _context.Category
                 .Include(c => c.Icon)
                 .FirstOrDefaultAsync(c => c.Id == categoryId && c.DeleteDate == null);
         }
