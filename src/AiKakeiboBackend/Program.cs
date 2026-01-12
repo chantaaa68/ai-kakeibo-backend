@@ -17,8 +17,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddAutoRegisteredServices();
 
 // Configure DbContext
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<KakeiboDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseMySql(
+        connectionString,
+        ServerVersion.AutoDetect(connectionString) // 接続文字列から自動でMySQLのバージョンを判別
+    ));
 
 // JWT 認証の設定
 builder.Services.AddAuthentication(options =>
