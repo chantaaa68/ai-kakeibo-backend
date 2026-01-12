@@ -91,6 +91,12 @@ namespace AiKakeiboBackend.DTOs
         public string? Email { get; set; }
 
         /// <summary>
+        /// ユーザーパスワードのハッシュ値
+        /// </summary>
+        [MinLength(1)]
+        public string? UserHash { get; set; }
+
+        /// <summary>
         /// 家計簿名
         /// </summary>
         [MinLength(1)]
