@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+  ai-kakeibo-backend:
+    image: ${DOCKER_REGISTRY-}ai-kakeibo-backend
+    build:
+      context: .
+      dockerfile: src/AiKakeiboBackend/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+    ports:
+      - "5000:8080"
+    networks:
+      - ai-kakeibo-network
+
+networks:
+  ai-kakeibo-network:
+    driver: bridge
