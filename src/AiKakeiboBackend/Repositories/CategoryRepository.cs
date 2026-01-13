@@ -67,7 +67,7 @@ namespace AiKakeiboBackend.Repositories
         public async Task<Icon?> GetIconByNameAsync(string iconName)
         {
             return await _context.Icon
-                .FirstOrDefaultAsync(i => i.DefaultIconName == iconName && i.DeleteDate == null);
+                .FirstOrDefaultAsync(i => i.OfficialIconName == iconName && i.DeleteDate == null);
         }
 
         /// <summary>

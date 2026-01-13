@@ -56,9 +56,10 @@ namespace AiKakeiboBackend.Repositories
         public async Task<List<KakeiboItem>> GetItemsByKakeiboIdAndRangeAsync(int kakeiboId, DateTime? startDate, DateTime? endDate)
         {
             IQueryable<KakeiboItem> query = _context.KakeiboItem
+                .Where(i => i.KakeiboId == kakeiboId && i.DeleteDate == null)
                 .Include(i => i.Category)
-                .Include(i => i.KakeiboItemFrequency)
-                .Where(i => i.KakeiboId == kakeiboId && i.DeleteDate == null);
+                    .ThenInclude(i => i.Icon)
+                .Include(i => i.KakeiboItemFrequency);
 
             if (startDate.HasValue && endDate.HasValue)
             {
