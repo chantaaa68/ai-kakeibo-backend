@@ -27,6 +27,18 @@ namespace AiKakeiboBackend.Controllers
         }
 
         /// <summary>
+        /// 全期間月次集計取得APIです。指定されたユーザーの全期間の月次集計結果を、収入・支出別、年月別、カテゴリ別に取得します。
+        /// パフォーマンス最適化版：必要なカラムのみを射影し、AsNoTracking()でトラッキングを無効化
+        /// </summary>
+        /// <param name="req">全期間月次集計結果取得リクエスト（UserId）</param>
+        /// <returns>全期間月次集計結果（収入・支出別、年月別、カテゴリ別の集計データ）</returns>
+        [HttpPost("GetMonthlyReport")]
+        public async Task<IActionResult> GetMonthlyReportAsync([FromBody] GetMonthlyReportRequest req)
+        {
+            return await _service.GetMonthlyReportAsync(req);
+        }
+
+        /// <summary>
         /// 月次集計取得APIです。指定されたユーザーの当月の家計簿集計結果（収入、支出、残高等）を取得します。
         /// </summary>
         /// <param name="req">月次集計結果取得リクエスト（UserId）</param>

@@ -1,5 +1,6 @@
 using AiKakeiboBackend.Attributes;
 using AiKakeiboBackend.Data;
+using AiKakeiboBackend.DTOs;
 using AiKakeiboBackend.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -160,6 +161,62 @@ namespace AiKakeiboBackend.Repositories
                 item.UpdateDate = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
+        }
+
+        /// <summary>
+        /// 全期間の月次集計データを取得します（最適化版）
+        /// パフォーマンス最適化：
+        /// 1. AsNoTracking() でトラッキングを無効化（読み取り専用クエリの高速化）
+        /// 2. Select() で必要なカラムのみを射影（データ転送量削減）
+        /// 3. 匿名型で中間データを取得し、メモリ上で効率的にグルーピング
+        /// </summary>
+        /// <param name="kakeiboId">家計簿ID</param>
+        /// <returns>月次レポートリスト</returns>
+        public async Task<List<MonthlyReport>> GetMonthlyReportDataAsync(int kakeiboId)
+        {
+            // 必要なデータのみを射影して取得（最適化ポイント1: AsNoTracking + Select）
+            var itemData = await _context.KakeiboItem
+                .AsNoTracking()
+                .Where(k => k.KakeiboId == kakeiboId && k.DeleteDate == null)
+                .Select(k => new
+                {
+                    k.InoutFlg,
+                    Year = k.UsedDate.Year,
+                    Month = k.UsedDate.Month,
+                    CategoryName = k.Category.CategoryName,
+                    IconName = k.Category.Icon.OfficialIconName ?? string.Empty,
+                    k.ItemAmount
+                })
+                .ToListAsync();
+
+            // メモリ上でグルーピング（最適化ポイント2: 単一のデータ取得後に効率的にグルーピング）
+            var monthlyReports = itemData
+                .GroupBy(k => k.InoutFlg)
+                .Select(inoutGroup => new MonthlyReport
+                {
+                    InoutFlg = inoutGroup.Key,
+                    MonthlyReportItems = inoutGroup
+                        .GroupBy(e => new { e.Year, e.Month })
+                        .Select(monthGroup => new MonthlyReportItem
+                        {
+                            UsedMonth = $"{monthGroup.Key.Year:D4}-{monthGroup.Key.Month:D2}",
+                            CategoryReportItems = monthGroup
+                                .GroupBy(t => new { t.CategoryName, t.IconName })
+                                .Select(categoryGroup => new CategoryReportItem
+                                {
+                                    CategoryName = categoryGroup.Key.CategoryName,
+                                    IconName = categoryGroup.Key.IconName,
+                                    TotalAmount = categoryGroup.Sum(e => e.ItemAmount)
+                                })
+                                .OrderByDescending(c => c.TotalAmount)
+                                .ToList()
+                        })
+                        .OrderByDescending(m => m.UsedMonth)
+                        .ToList()
+                })
+                .ToList();
+
+            return monthlyReports;
         }
     }
 }

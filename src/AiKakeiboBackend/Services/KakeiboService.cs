@@ -62,6 +62,41 @@ namespace AiKakeiboBackend.Services
         }
 
         /// <summary>
+        /// 全期間の月次集計結果を取得します。
+        /// 収入・支出別に、年月ごとのカテゴリ別集計結果を算出します。
+        /// パフォーマンス最適化：必要なカラムのみを射影し、AsNoTracking()でトラッキングを無効化
+        /// </summary>
+        /// <param name="request">全期間月次集計結果取得リクエスト（ユーザーIDを含む）</param>
+        /// <returns>全期間月次集計結果を含むApiResponse。家計簿が存在しない場合はエラーメッセージを返却</returns>
+        public async Task<IActionResult> GetMonthlyReportAsync(GetMonthlyReportRequest request)
+        {
+            try
+            {
+                // ユーザーIDから家計簿IDを取得
+                int? kakeiboId = await _kakeiboRepository.GetKakeiboIdAsync(request.UserId);
+
+                if (kakeiboId == null || kakeiboId == 0)
+                {
+                    return ApiResponseHelper.Fail("家計簿が存在しません");
+                }
+
+                // 最適化版：必要なデータのみを射影し、メモリ上でグルーピング
+                List<MonthlyReport> monthlyReports = await _kakeiboRepository.GetMonthlyReportDataAsync(kakeiboId.Value);
+
+                GetMonthlyReportResult response = new GetMonthlyReportResult
+                {
+                    MonthlyReports = monthlyReports
+                };
+
+                return ApiResponseHelper.Success(response);
+            }
+            catch (Exception ex)
+            {
+                return ApiResponseHelper.Fail($"月次集計取得中にエラーが発生しました: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// 当月の家計簿集計結果を取得します。
         /// 当月の収入合計、支出合計、およびカテゴリ別の集計結果を算出します。
         /// </summary>
@@ -244,6 +279,7 @@ namespace AiKakeiboBackend.Services
         /// 新規家計簿アイテムを登録します。
         /// アイテムの基本情報（名称、金額、カテゴリ等）と繰り返し頻度情報を同時に作成します。
         /// 繰り返し頻度情報は固定費の管理に利用されます。
+        /// Frequency が 0 以外の場合、FixedEndDate まで繰り返しアイテムを自動登録します。
         /// </summary>
         /// <param name="request">家計簿アイテム登録リクエスト（家計簿ID、カテゴリID、アイテム名、金額、入出金フラグ、使用日、頻度等を含む）</param>
         /// <returns>登録成功時は登録件数を含むApiResponse。家計簿またはカテゴリが見つからない場合はエラーメッセージを返却</returns>
@@ -282,31 +318,89 @@ namespace AiKakeiboBackend.Services
 
                 await _kakeiboRepository.CreateFrequencyAsync(frequency);
 
-                // KakeiboItem作成
-                KakeiboItem newItem = new KakeiboItem
-                {
-                    KakeiboId = request.KakeiboId,
-                    CategoryId = request.CategoryId,
-                    ItemName = request.ItemName,
-                    ItemAmount = request.ItemAmount,
-                    InoutFlg = request.InoutFlg,
-                    UsedDate = request.UsedDate,
-                    FrequencyId = frequency.Id
-                };
+                // 繰り返しアイテム登録数
+                int registeredCount = 0;
 
-                await _kakeiboRepository.CreateItemAsync(newItem);
+                // Frequency が 0（1回限り）の場合は1件のみ登録
+                if (request.Frequency == 0)
+                {
+                    KakeiboItem newItem = new KakeiboItem
+                    {
+                        KakeiboId = request.KakeiboId,
+                        CategoryId = request.CategoryId,
+                        ItemName = request.ItemName,
+                        ItemAmount = request.ItemAmount,
+                        InoutFlg = request.InoutFlg,
+                        UsedDate = request.UsedDate,
+                        FrequencyId = frequency.Id
+                    };
+
+                    await _kakeiboRepository.CreateItemAsync(newItem);
+                    registeredCount = 1;
+                }
+                else
+                {
+                    // 固定費の場合、繰り返し登録
+                    DateTime currentDate = request.UsedDate;
+                    DateTime endDate = request.FixedEndDate ?? request.UsedDate;
+
+                    while (currentDate <= endDate)
+                    {
+                        KakeiboItem newItem = new KakeiboItem
+                        {
+                            KakeiboId = request.KakeiboId,
+                            CategoryId = request.CategoryId,
+                            ItemName = request.ItemName,
+                            ItemAmount = request.ItemAmount,
+                            InoutFlg = request.InoutFlg,
+                            UsedDate = currentDate,
+                            FrequencyId = frequency.Id
+                        };
+
+                        await _kakeiboRepository.CreateItemAsync(newItem);
+                        registeredCount++;
+
+                        // 次の日付を計算
+                        currentDate = GetNextDate(currentDate, request.Frequency);
+                    }
+                }
 
                 RegistKakeiboItemResponse response = new RegistKakeiboItemResponse
                 {
-                    Count = 1
+                    Count = registeredCount
                 };
 
-                return ApiResponseHelper.Success(response, "アイテムを登録しました");
+                return ApiResponseHelper.Success(response, $"{registeredCount}件のアイテムを登録しました");
             }
             catch (Exception ex)
             {
                 return ApiResponseHelper.Fail($"アイテム登録中にエラーが発生しました: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// 頻度に応じて次の日付を計算します
+        /// </summary>
+        /// <param name="currentDate">現在の日付</param>
+        /// <param name="frequency">頻度 (1:毎日, 2:1週間, 3:2週間, 4:3週間, 5:1か月, 6:2か月, 7:3か月, 8:4か月, 9:5か月, 10:6か月, 11:1年)</param>
+        /// <returns>次の日付</returns>
+        private DateTime GetNextDate(DateTime currentDate, int frequency)
+        {
+            return frequency switch
+            {
+                1 => currentDate.AddDays(1),      // 毎日
+                2 => currentDate.AddDays(7),      // 1週間
+                3 => currentDate.AddDays(14),     // 2週間
+                4 => currentDate.AddDays(21),     // 3週間
+                5 => currentDate.AddMonths(1),    // 1か月
+                6 => currentDate.AddMonths(2),    // 2か月
+                7 => currentDate.AddMonths(3),    // 3か月
+                8 => currentDate.AddMonths(4),    // 4か月
+                9 => currentDate.AddMonths(5),    // 5か月
+                10 => currentDate.AddMonths(6),   // 6か月
+                11 => currentDate.AddYears(1),    // 1年
+                _ => currentDate.AddDays(1)       // デフォルトは毎日
+            };
         }
 
         /// <summary>

@@ -81,5 +81,12 @@ namespace AiKakeiboBackend.Repositories
         /// <param name="itemId">削除する項目ID</param>
         /// <returns>非同期処理タスク</returns>
         Task DeleteItemAsync(int itemId);
+
+        /// <summary>
+        /// 全期間の月次集計データを取得します（最適化版）
+        /// </summary>
+        /// <param name="kakeiboId">家計簿ID</param>
+        /// <returns>月次レポートリスト</returns>
+        Task<List<MonthlyReport>> GetMonthlyReportDataAsync(int kakeiboId);
     }
 }

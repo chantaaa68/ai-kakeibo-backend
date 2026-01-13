@@ -17,6 +17,18 @@ namespace AiKakeiboBackend.DTOs
     }
 
     /// <summary>
+    /// 全期間月次集計結果取得リクエスト
+    /// </summary>
+    public class GetMonthlyReportRequest
+    {
+        /// <summary>
+        /// ユーザーID
+        /// </summary>
+        [Required]
+        public int UserId { get; set; }
+    }
+
+    /// <summary>
     /// 家計簿アイテムリスト取得リクエスト
     /// </summary>
     public class GetKakeiboItemListRequest
@@ -202,6 +214,32 @@ namespace AiKakeiboBackend.DTOs
         /// 月次収入リスト
         /// </summary>
         public List<MonthlyReportItem> MonthlyIncomes { get; set; } = new();
+    }
+
+    /// <summary>
+    /// 全期間月次集計結果レスポンス
+    /// </summary>
+    public class GetMonthlyReportResult
+    {
+        /// <summary>
+        /// 月次レポートリスト（収入・支出別）
+        /// </summary>
+        public List<MonthlyReport> MonthlyReports { get; set; } = new();
+    }
+
+    /// <summary>
+    /// 月次レポート（収入・支出別）
+    /// </summary>
+    public class MonthlyReport
+    {
+        /// <summary>
+        /// 収支フラグ (true: 収入, false: 支出)
+        /// </summary>
+        public bool InoutFlg { get; set; }
+        /// <summary>
+        /// 月次レポート項目リスト
+        /// </summary>
+        public List<MonthlyReportItem> MonthlyReportItems { get; set; } = new();
     }
 
     /// <summary>
