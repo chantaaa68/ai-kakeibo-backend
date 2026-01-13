@@ -79,11 +79,12 @@ namespace AiKakeiboBackend.Repositories
         public async Task<List<KakeiboItem>> GetItemsByKakeiboIdForMonthAsync(int kakeiboId, DateTime startOfMonth, DateTime endOfMonth)
         {
             return await _context.KakeiboItem
-                .Include(i => i.Category)
                 .Where(i => i.KakeiboId == kakeiboId
                             && i.DeleteDate == null
                             && i.UsedDate >= startOfMonth
                             && i.UsedDate < endOfMonth)
+                .Include(i => i.Category)
+                    .ThenInclude(i => i.Icon)
                 .ToListAsync();
         }
 
