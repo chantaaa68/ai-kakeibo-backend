@@ -222,9 +222,13 @@ namespace AiKakeiboBackend.DTOs
     public class GetMonthlyReportResult
     {
         /// <summary>
-        /// 月次レポートリスト（収入・支出別）
+        /// 月次支出リスト
         /// </summary>
-        public List<MonthlyReport> MonthlyReports { get; set; } = new();
+        public List<MonthlyReportItem> MonthlyExpenses { get; set; } = new();
+        /// <summary>
+        /// 月次収入リスト
+        /// </summary>
+        public List<MonthlyReportItem> MonthlyIncomes { get; set; } = new();
     }
 
     /// <summary>
@@ -262,6 +266,11 @@ namespace AiKakeiboBackend.DTOs
     /// </summary>
     public class CategoryReportItem
     {
+        /// <summary>
+        /// カテゴリID
+        /// </summary>
+        public int CategoryId { get; set; }
+
         /// <summary>
         /// カテゴリー名
         /// </summary>

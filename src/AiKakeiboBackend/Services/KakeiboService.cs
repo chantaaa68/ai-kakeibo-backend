@@ -85,7 +85,8 @@ namespace AiKakeiboBackend.Services
 
                 GetMonthlyReportResult response = new GetMonthlyReportResult
                 {
-                    MonthlyReports = monthlyReports
+                    MonthlyExpenses = monthlyReports.Find(m => m.InoutFlg == false)!.MonthlyReportItems,
+                    MonthlyIncomes = monthlyReports.Find(m => m.InoutFlg == true)!.MonthlyReportItems,
                 };
 
                 return ApiResponseHelper.Success(response);
@@ -124,9 +125,10 @@ namespace AiKakeiboBackend.Services
                 // 支出のカテゴリ別集計
                 List<CategoryReportItem> expenseCategories = items
                     .Where(i => !i.InoutFlg)
-                    .GroupBy(i => new { i.Category.CategoryName, i.Category.Icon.OfficialIconName })
+                    .GroupBy(i => new { i.CategoryId, i.Category.CategoryName, i.Category.Icon.OfficialIconName })
                     .Select(g => new CategoryReportItem
                     {
+                        CategoryId = g.Key.CategoryId,
                         CategoryName = g.Key.CategoryName,
                         IconName = g.Key.OfficialIconName ?? string.Empty,
                         TotalAmount = g.Sum(i => i.ItemAmount)
@@ -136,9 +138,10 @@ namespace AiKakeiboBackend.Services
                 // 収入のカテゴリ別集計
                 List<CategoryReportItem> incomeCategories = items
                     .Where(i => i.InoutFlg)
-                    .GroupBy(i => new { i.Category.CategoryName, i.Category.Icon.OfficialIconName })
+                    .GroupBy(i => new { i.CategoryId, i.Category.CategoryName, i.Category.Icon.OfficialIconName })
                     .Select(g => new CategoryReportItem
                     {
+                        CategoryId = g.Key.CategoryId,
                         CategoryName = g.Key.CategoryName,
                         IconName = g.Key.OfficialIconName ?? string.Empty,
                         TotalAmount = g.Sum(i => i.ItemAmount)

@@ -182,6 +182,7 @@ namespace AiKakeiboBackend.Repositories
                 .Where(k => k.KakeiboId == kakeiboId && k.DeleteDate == null)
                 .Select(k => new
                 {
+                    k.CategoryId,
                     k.InoutFlg,
                     Year = k.UsedDate.Year,
                     Month = k.UsedDate.Month,
@@ -203,9 +204,10 @@ namespace AiKakeiboBackend.Repositories
                         {
                             UsedMonth = $"{monthGroup.Key.Year:D4}-{monthGroup.Key.Month:D2}",
                             CategoryReportItems = monthGroup
-                                .GroupBy(t => new { t.CategoryName, t.IconName })
+                                .GroupBy(t => new { t.CategoryId,t.CategoryName, t.IconName })
                                 .Select(categoryGroup => new CategoryReportItem
                                 {
+                                    CategoryId = categoryGroup.Key.CategoryId,
                                     CategoryName = categoryGroup.Key.CategoryName,
                                     IconName = categoryGroup.Key.IconName,
                                     TotalAmount = categoryGroup.Sum(e => e.ItemAmount)

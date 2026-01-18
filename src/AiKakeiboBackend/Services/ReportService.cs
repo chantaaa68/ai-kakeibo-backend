@@ -22,16 +22,16 @@ namespace AiKakeiboBackend.Services
 
         /// <summary>
         /// カテゴリ別トレンドレポートを取得します。
-        /// 指定されたカテゴリの全期間の月別推移データと、指定月の取引明細を返します。
+        /// 指定されたカテゴリの全期間の月別集計データと、各月の取引明細を返します。
         /// </summary>
         /// <param name="categoryId">カテゴリID</param>
-        /// <param name="targetDate">対象日（省略時は現在の月）</param>
+        /// <param name="targetDate">対象日（未使用、将来の拡張用）</param>
         /// <returns>カテゴリ別トレンドレポートを含むApiResponse。カテゴリが存在しない場合はエラーメッセージを返却</returns>
         public async Task<IActionResult> GetCategoryTrendReportAsync(int categoryId, DateTime? targetDate)
         {
             try
             {
-                // カテゴリの存在確認
+                // カテゴリの存在確認（IconをInclude）
                 Category? category = await _reportRepository.GetCategoryByIdAsync(categoryId);
 
                 if (category == null)
@@ -39,45 +39,16 @@ namespace AiKakeiboBackend.Services
                     return ApiResponseHelper.Fail("カテゴリが見つかりません");
                 }
 
-                // targetDateがnullの場合は現在の月をデフォルトとする
-                DateTime targetMonth = targetDate ?? DateTime.UtcNow;
-                DateTime startOfTargetMonth = new DateTime(targetMonth.Year, targetMonth.Month, 1);
-                DateTime endOfTargetMonth = startOfTargetMonth.AddMonths(1);
-
                 // カテゴリIDに紐づく全期間の取引データを取得
                 List<KakeiboItem> allItems = await _reportRepository.GetItemsByCategoryIdAsync(categoryId);
 
-                // トレンドデータの生成
-                List<TrendItem> trends = GenerateTrends(allItems);
-
-                // 指定月の取引明細を取得
-                List<KakeiboItem> targetMonthItems = await _reportRepository.GetItemsByCategoryIdAndRangeAsync(
-                    categoryId,
-                    startOfTargetMonth,
-                    endOfTargetMonth
-                );
-
-                // 指定月の合計金額を算出
-                decimal totalAmountThisMonth = targetMonthItems.Sum(i => i.ItemAmount);
-
-                // 取引明細をDTOに変換
-                List<TransactionItem> transactions = targetMonthItems
-                    .Select(i => new TransactionItem
-                    {
-                        Id = i.Id,
-                        ItemName = i.ItemName ?? string.Empty,
-                        ItemAmount = i.ItemAmount,
-                        UsedDate = i.UsedDate,
-                        InoutFlg = i.InoutFlg
-                    })
-                    .ToList();
+                // 月別集計データの生成
+                List<MonthlyTrendData> monthlyData = GenerateMonthlyData(allItems, category.Icon?.OfficialIconName ?? string.Empty);
 
                 GetCategoryTrendReportResponse response = new GetCategoryTrendReportResponse
                 {
                     CategoryName = category.CategoryName,
-                    TotalAmountThisMonth = totalAmountThisMonth,
-                    Trends = trends,
-                    Transactions = transactions
+                    MonthlyData = monthlyData
                 };
 
                 return ApiResponseHelper.Success(response);
@@ -89,50 +60,57 @@ namespace AiKakeiboBackend.Services
         }
 
         /// <summary>
-        /// 全期間の月別推移データを生成します。
-        /// 最初のデータから最新月まで、データがない月も0円として埋めた連続データを生成します。
+        /// 全期間の月別集計データを生成します。
+        /// データがある月のみを返却します。
         /// </summary>
         /// <param name="items">取引データのリスト</param>
-        /// <returns>月別推移データのリスト</returns>
-        private List<TrendItem> GenerateTrends(List<KakeiboItem> items)
+        /// <param name="iconName">カテゴリのアイコン名</param>
+        /// <returns>月別集計データのリスト</returns>
+        private List<MonthlyTrendData> GenerateMonthlyData(List<KakeiboItem> items, string iconName)
         {
-            List<TrendItem> trends = new List<TrendItem>();
-
             if (items.Count == 0)
             {
-                return trends;
+                return new List<MonthlyTrendData>();
             }
 
-            // 月別に集計
-            Dictionary<DateTime, decimal> monthlyData = items
-                .GroupBy(i => new DateTime(i.UsedDate.Year, i.UsedDate.Month, 1))
-                .ToDictionary(
-                    g => g.Key,
-                    g => (decimal)g.Sum(i => i.ItemAmount)
-                );
+            // 月別にグループ化
+            var monthlyGroups = items
+                .GroupBy(i => new { i.UsedDate.Year, i.UsedDate.Month })
+                .OrderBy(g => g.Key.Year)
+                .ThenBy(g => g.Key.Month);
 
-            // 最初のデータと最新月を取得
-            DateTime firstMonth = monthlyData.Keys.Min();
-            DateTime lastMonth = DateTime.UtcNow;
-            DateTime currentMonth = new DateTime(lastMonth.Year, lastMonth.Month, 1);
+            List<MonthlyTrendData> monthlyData = new List<MonthlyTrendData>();
 
-            // 最初の月から最新月まで全ての月を生成（データがない月は0円）
-            DateTime month = firstMonth;
-            while (month <= currentMonth)
+            foreach (var monthGroup in monthlyGroups)
             {
-                decimal amount = monthlyData.ContainsKey(month) ? monthlyData[month] : 0;
+                // 該当月のデータを日別にグループ化してKakeiboItemInfo形式に変換
+                List<KakeiboItemInfo> dailyItems = monthGroup
+                    .GroupBy(i => i.UsedDate.Day)
+                    .OrderBy(g => g.Key)
+                    .Select(dayGroup => new KakeiboItemInfo
+                    {
+                        DayNo = dayGroup.Key,
+                        Items = dayGroup.Select(i => new Item
+                        {
+                            ItemId = i.Id,
+                            ItemName = i.ItemName ?? string.Empty,
+                            ItemAmount = i.ItemAmount,
+                            InoutFlg = i.InoutFlg,
+                            UsedDate = i.UsedDate,
+                            IconName = iconName
+                        }).ToList()
+                    })
+                    .ToList();
 
-                trends.Add(new TrendItem
+                monthlyData.Add(new MonthlyTrendData
                 {
-                    Label = $"{month.Year}年{month.Month}月",
-                    Amount = amount,
-                    YearMonth = month.ToString("yyyy-MM-dd")
+                    YearMonth = $"{monthGroup.Key.Year:D4}-{monthGroup.Key.Month:D2}",
+                    TotalAmount = monthGroup.Sum(i => i.ItemAmount),
+                    Items = dailyItems
                 });
-
-                month = month.AddMonths(1);
             }
 
-            return trends;
+            return monthlyData;
         }
     }
 }
